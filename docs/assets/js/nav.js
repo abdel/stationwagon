@@ -36,10 +36,7 @@ var nav = {
 			"Cli":			"classes/cli.html",
 			"Config":		"classes/config.html",
 			"Cookie":		"classes/cookie.html",
-			"Crypt": {
-				"Configuration":	"classes/crypt/config.html",
-				"Usage":			"classes/crypt/usage.html"
-			},
+			"Crypt":		"classes/crypt.html",
 			// "Database":		"todo.html",
 			 "Date":			"classes/date.html",
 			// "DButil":		"todo.html",
@@ -51,12 +48,9 @@ var nav = {
 			// "Fieldset":		"todo.html",
 			// "File":			"todo.html",
 			// "Form":			"todo.html",
-			"Ftp":	{
-				"Configuration":	"classes/ftp/config.html",
-				"Usage":			"classes/ftp/usage.html"
-			},
+			"Ftp":			"classes/ftp.html",
 			"Html":			"classes/html.html",
-			"Inflector":	"todo.html",
+			"Inflector":	"classes/inflector.html",
 			"Input":		"classes/input.html",
 			"Lang":			"classes/lang.html",
 			"Log":	    	"classes/log.html",
@@ -73,7 +67,7 @@ var nav = {
 				"Usage":			"classes/session/usage.html",
 				"Advanced":			"classes/session/advanced.html"
 			},
-			// "Unzip":		"todo.html",
+			// "Unzip":		"todo.html", // dont do this, needs to be cleaned up. forget it exists.
 			"Upload": {
 				"Configuration":	"classes/upload/config.html",
 				"Usage":			"classes/upload/usage.html"

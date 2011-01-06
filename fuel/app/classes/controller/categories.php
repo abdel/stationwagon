@@ -1,9 +1,9 @@
 <?php
 
-class Controller_Categories extends Controller_Wagon {
+class Controller_Categories extends Controller_Template {
 
     public function action_index()
     {
-        $this->view('categories/index');
+        $this->template->content = View::factory('categories/index');
     }
 }
