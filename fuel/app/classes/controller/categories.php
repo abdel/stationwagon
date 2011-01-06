@@ -1,5 +1,6 @@
 <?php
 
+<<<<<<< HEAD
 class Controller_Categories extends Controller_Template {
 
 	/*
@@ -17,3 +18,22 @@ class Controller_Categories extends Controller_Template {
 }
 
 /* End of file categories.php */
+=======
+class Controller_Categories extends Controller_Wagon {
+    
+    /**
+     * @access public
+     */
+    public function action_index()
+    {
+		
+    }
+	
+    public function action_404()
+    {
+		
+    }
+}
+
+/* End of file articles.php */
+>>>>>>> origin/master
