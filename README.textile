@@ -1,0 +1,6 @@
+h1. README
+
+Stationwagon is a Fuel-based blog application by Abdelraham Mahmoud and Alfredo Rivera. The purpose of this application is to show users new to the Fuel framework how things work by providing example code.
+
+h2. Features
+* One?
