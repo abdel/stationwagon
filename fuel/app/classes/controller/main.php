@@ -2,6 +2,9 @@
 
 class Controller_Main extends Controller_Template {
 
+	/*
+		@access		public
+	*/
 	public function action_index()
 	{
 		
