@@ -1,6 +1,6 @@
 <?php
 
-class Controller_Main extends Controller_Template {
+class Controller_Articles extends Controller_Template {
 
 	/*
 		@access		public
@@ -16,4 +16,4 @@ class Controller_Main extends Controller_Template {
 	}
 }
 
-/* End of file main.php */
+/* End of file articles.php */
