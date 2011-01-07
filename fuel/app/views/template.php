@@ -14,6 +14,8 @@
             <div class="menubar">
                 <div class="menu_item"><?php echo Html::anchor('articles/index', 'All Articles'); ?></div>
                 <div class="menu_item"><?php echo Html::anchor('articles/add', 'Add Article'); ?></div>
+                <div class="menu_item"><?php echo Html::anchor('categories/index', 'All Categories'); ?></div>
+                <div class="menu_item"><?php echo Html::anchor('categories/add', 'Add Category'); ?></div>
             </div>
         </div>
         
