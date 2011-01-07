@@ -20,6 +20,9 @@
         </div>
         
         <div class="content">
+            <?php if (Session::get_flash('message')): ?>
+            <p><?php echo Session::get_flash('message'); ?></p>
+            <?php endif; ?>
             <?php echo $content; ?>
         </div>
         

@@ -19,7 +19,7 @@ return array(
 	 *
 	 * Make sure to update this to something completely random!!!!
 	 */
-	'salt'			=> 'sup3rs3Cr3tk3y564',
+	'salt'			=> 'dafD-031CDKxSQ',
 
 	/**
 	 * Indicate if you want to use the MCRYPT libaries if available.
