@@ -15,8 +15,7 @@
     <tr>
         <td class="row1" width="5%"><?php echo $article->id; ?></td>
         <td class="row1">
-            <?php echo ($article->category_id != 0) ? 
-                    Model_Category::find($article->category_id, array('name'))->name : 'Uncategorized'; ?>
+            <?php echo ($article->category_id != 0) ? $article->category->name : 'Uncategorized'; ?>
         </td>
         <td class="row1"><?php echo $article->title; ?></td>
         <td class="row1"><?php echo $article->body; ?></td>

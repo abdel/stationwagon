@@ -16,6 +16,7 @@ class Controller_Articles extends Controller_Template {
         $articles = Model_Article::find('all', array(
             'offset' => Pagination::$offset,
             'limit' => Pagination::$per_page,
+            'include' => 'category',
         ));
         
         $this->template->title = 'Articles';
@@ -58,6 +59,40 @@ class Controller_Articles extends Controller_Template {
         $this->template->title = 'Add Article';
         $this->template->content = View::factory('articles/add', $data);
     }
+    
+    public function action_edit($id)
+    {
+        $article = Model_Article::find($id);
+        
+        if ( Input::method() == 'POST' )
+        {
+            $edit_article = Validation::factory('edit_article');
+            $edit_article->add('title')->add_rule('required');
+            $edit_article->add('body')->add_rule('required');
+            
+            if ( $edit_article->run() == TRUE )
+            {
+                $article->category_id = Input::post('category_id');
+                $article->title = Input::post('title');
+                $article->body = Input::post('body');
+                $article->save();
+
+                Session::set_flash('message', 'Article successfully updated.');
+
+                Output::redirect('articles/edit/'.$article->id);
+            }
+            else
+            {
+                $data['errors'] = $edit_article->show_errors();
+            }
+        }
+        
+        $data['article'] = $article;
+        $data['categories'] = Model_Category::find('all');
+        $this->template->title = 'Edit Article - '.$article->title;
+        $this->template->content = View::factory('articles/edit', $data);
+    }
+    
     
     public function action_delete($id)
     {

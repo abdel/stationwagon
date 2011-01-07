@@ -25,7 +25,7 @@
 </div>
 
 <div class="input submit">
-    <?php echo Form::submit(NULL, 'Add Article'); ?>
+    <?php echo Form::submit('add_article', 'Add Article'); ?>
 </div>
 
 <?php echo Form::close(); ?>
