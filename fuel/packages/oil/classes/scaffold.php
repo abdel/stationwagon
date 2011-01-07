@@ -67,7 +67,7 @@ class Scaffold
 	{
 		if ( ! $handle = @fopen($filepath, 'w+'))
 		{
-			throw new \Exception('Cannot open file: '. $filepath);
+			throw new Exception('Cannot open file: '. $filepath);
 		}
 
 		$result = @fwrite($handle, $data);
@@ -75,7 +75,7 @@ class Scaffold
 		// Write $somecontent to our opened file.
 		if ($result === FALSE)
 		{
-			throw new \Exception('Cannot write to file: '. $filepath);
+			throw new Exception('Cannot write to file: '. $filepath);
 		}
 
 		@fclose($handle);
@@ -87,4 +87,4 @@ class Scaffold
 
 }
 
-/* End of file scaffold.php */
+/* End of file oil/classes/scaffold.php */

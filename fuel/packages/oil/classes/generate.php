@@ -117,10 +117,7 @@ MODEL;
 		$folder = array_shift($args);
 		$controller_title = \Inflector::humanize($folder);
 
-		if (empty($args))
-		{
-			$args = array('index');
-		}
+		empty($args) and $args = array('index');
 
 		// Make the directory for these views to be store in
 		if ( ! is_dir($view_dir = APPPATH . 'views/'.$folder.'/'))
@@ -198,7 +195,7 @@ VIEW;
 
 		if ($filepath = static::_build_migration($migration_name, $mode, $table, $args))
 		{
-			echo "Created migration: " . \Fuel::clean_path($filepath).PHP_EOL;
+			\Cli::write('Created migration: ' . \Fuel::clean_path($filepath));
 		}
 	}
 
@@ -212,7 +209,6 @@ Usage:
 Runtime options:
   -f, [--force]    # Overwrite files that already exist
   -s, [--skip]     # Skip files that already exist
-  -p, [--pretend]  # Run but do not make any changes
   -q, [--quiet]    # Supress status output
 
 Fuel options:
@@ -263,6 +259,9 @@ HELP;
 
 		if ($mode == 'create_table' or $mode == 'add_fields')
 		{
+			// Store an aray of what fields are being added
+			$fields = array();
+			
 			$field_str = '';
 
 			foreach ($args as $arg)
@@ -270,13 +269,18 @@ HELP;
 				// Parse the argument for each field in a pattern of name:type[constraint]
 				preg_match('/([a-z0-9_]+):([a-z0-9_]+)(\[([0-9]+)\])?/i', $arg, $matches);
 
-				$name = $matches[1];
+				$name = $fields[] = $matches[1];
 				$type = $matches[2];
 				$constraint = isset($matches[4]) ? $matches[4] : null;
 
 				if ($type === 'string')
 				{
 					$type = 'varchar';
+				}
+				
+				else if ($type === 'integer')
+				{
+					$type = 'int';
 				}
 
 				if (in_array($type, array('text', 'blob', 'datetime')))
@@ -301,22 +305,25 @@ HELP;
 		switch ($mode)
 		{
 			case 'create_table':
+
+				// Shove an id field at the start
+				$field_str = "\t\t\t'id' => array('type' => 'int', 'auto_increment' => true),".PHP_EOL . $field_str;
+
 				$up = <<<UP
-		DBUtil::create_table('{$table}', array(
+		\DBUtil::create_table('{$table}', array(
 $field_str
 		), array('id'));
 UP;
 
 				$down = <<<DOWN
-		DBUtil::drop_table('{$table}');
+		\DBUtil::drop_table('{$table}');
 DOWN;
 			break;
 
 			case 'drop_table':
 				$up = <<<UP
-		DBUtil::drop_table('{$table}');
+		\DBUtil::drop_table('{$table}');
 UP;
-
 				$down = '';
 			break;
 
@@ -329,7 +336,9 @@ UP;
 		$migration = <<<MIGRATION
 <?php
 
-class Migration_{$migration_name} extends Migration {
+namespace Fuel\Migrations;
+
+class {$migration_name} {
 
 	function up()
 	{
@@ -346,9 +355,9 @@ MIGRATION;
 		$number = self::_find_migration_number();
 		$filepath = APPPATH . 'migrations/'.$number.'_' . strtolower($migration_name) . '.php';
 
-		if (glob(APPPATH .'migrations/*_' . strtolower($migration_name) . '.php'))
+		if (glob(APPPATH . 'migrations/*_' . strtolower($migration_name) . '.php'))
 		{
-			throw new \Exception('A migration with this name already exists.');
+			throw new Exception('A migration with this name already exists.');
 		}
 
 		if (self::write($filepath, $migration))
@@ -356,7 +365,6 @@ MIGRATION;
 			self::_update_current_version(intval($number));
 			return $filepath;
 		}
-
 
 		return false;
 	}
@@ -389,13 +397,16 @@ MIGRATION;
 
 	private function _clear_args($actions = array())
 	{
- 		foreach ($actions as $key => $action) {
-		if (substr($action, 0, 1) === '-')
-			unset($actions[$key]);
-        }
+ 		foreach ($actions as $key => $action)
+		{
+			if (substr($action, 0, 1) === '-')
+			{
+				unset($actions[$key]);
+			}
+		}
 
 		return $actions;
 	}
 }
 
-/* End of file model.php */
+/* End of file oil/classes/generate.php */

@@ -225,15 +225,13 @@ class Fuel {
 			$file_path = $dir.$path;
 			if (is_file($file_path))
 			{
-				if ($multiple)
-				{
-					$found[] = $file_path;
-				}
-				else
+				if ( ! $multiple)
 				{
 					$found = $file_path;
 					break;
 				}
+
+				$found[] = $file_path;
 			}
 		}
 
@@ -271,7 +269,7 @@ class Fuel {
 	 * @param	string	the new path
 	 * @param	bool	whether to add just behind the APPPATH or to prefix
 	 */
-	public static function add_path($path, $prefix = FALSE)
+	public static function add_path($path, $prefix = false)
 	{
 		if ($prefix)
 		{
@@ -374,13 +372,6 @@ class Fuel {
 					$ns = '\\'.ucfirst($name);
 					Autoloader::add_namespaces(array(
 						$ns					=> $path.'classes'.DS,
-						$ns.'\\Model'		=> $path.'classes'.DS.'model'.DS,
-						$ns.'\\Controller'	=> $path.'classes'.DS.'controller'.DS,
-					), true);
-					Autoloader::add_namespace_aliases(array(
-						$ns.'\\Controller'	=> 'Fuel\\App',
-						$ns.'\\Model'		=> 'Fuel\\App',
-						$ns					=> 'Fuel\\App',
 					), true);
 					break;
 				}
@@ -557,4 +548,4 @@ class Fuel {
 	}
 }
 
-/* End of file core.php */
+/* End of file fuel.php */
