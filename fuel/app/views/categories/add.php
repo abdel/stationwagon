@@ -1,5 +1,4 @@
 <h2>Add a Category</h2>
-<p>Add a new category.</p>
 
 <?php echo isset($errors) ? $errors : false; ?>
 <?php echo Form::open('categories/add'); ?>

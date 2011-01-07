@@ -1,5 +1,4 @@
 <h2>Add an Article</h2>
-<p>Publish a new article!</p>
 
 <?php echo isset($errors) ? $errors : false; ?>
 <?php echo Form::open('articles/add'); ?>
