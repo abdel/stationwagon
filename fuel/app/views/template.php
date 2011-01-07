@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title><?php echo isset($title) ? $title : 'Stationwagon'; ?></title>
+        <title>Statationwagon<?php echo isset($title) ? ' - '.$title : null; ?></title>
         <?php Asset::add_path('/assets/'); ?>
         <?php echo Asset::css('style.css'); ?>
     </head>
