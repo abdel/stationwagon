@@ -2,7 +2,6 @@
 <html>
     <head>
         <title>Stationwagon<?php echo isset($title) ? ' - '.$title : null; ?></title>
-        <?php Asset::add_path('/assets/'); ?>
         <?php echo Asset::css('style.css'); ?>
     </head>
     <body>
