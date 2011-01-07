@@ -19,7 +19,7 @@ return array(
 	 *
 	 * Set this to false or remove if you using mod_rewrite.
 	 */
-	'index_file'	=> 'index.php',
+	'index_file'	=> '',
 
 	/**
 	 * Your environment.  Can be set to any of the following:
@@ -83,7 +83,7 @@ return array(
 	 * Security settings
 	 */
 	'security' => array(
-		'csrf_autoload'			=> false,
+		'csrf_autoload'			=> true,
 		'csrf_token_key'		=> 'fuel_csrf_token',
 		'csrf_expiration'		=> 0,
 		'input_filter'			=> array('htmlentities'),
