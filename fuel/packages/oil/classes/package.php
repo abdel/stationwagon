@@ -24,8 +24,19 @@ namespace Oil;
  */
 class Package
 {
-	public function install($package, $version = null)
+	protected static $protected = array('auth', 'activerecord', 'octane', 'oil');
+
+	protected static $git = 'git';
+
+	public static function install($package = null)
 	{
+		// Make sure something is set
+		if ($package === null)
+		{
+			static::help();
+			return;
+		}
+
 		$config = \Config::load('package');
 
 		$version = \Cli::option('version', 'master');
@@ -33,53 +44,100 @@ class Package
 		// Check to see if this package is already installed
 		if (is_dir(PKGPATH . $package))
 		{
-			\Cli::write(\Cli::color('Package "' . $package . '" is already installed.', 'red'));
+			throw new Exception('Package "' . $package . '" is already installed.');
 			return;
 		}
 
-		$package_found = FALSE;
-		
 		foreach ($config['sources'] as $source)
 		{
-			$zip_url = rtrim($source, '/').'/fuel-'.$package.'/zipball/'.$version;
+			$zip_url = 'http://' . rtrim($source, '/').'/fuel-'.$package.'/zipball/'.$version;
 
 			if ($fp = @fopen($zip_url, 'r'))
 			{
-				\Cli::write('Downloading package: '.$zip_url);
+				// We don't actually need this, just checking the file is there
+				fclose($fp);
 
-				$package_found = TRUE;
+				// Now, lets get this package
 
-				$content = '';
-
-				// We need somewhere to put the zip, make if missing
-				if ( ! is_dir(APPPATH . 'tmp'))
+				// If a direct download is requested, or git is unavailable, download it!
+				if (\Cli::option('direct') OR static::_use_git() === false)
 				{
-					mkdir(APPPATH . 'tmp');
+					static::_download_package_zip($zip_url, $package, $version);
+				}
+
+				// Otherwise, get your clone on baby!
+				else
+				{
+					static::_clone_package_repo($source, $package, $version);
 				}
 				
-				// keep reading until there's nothing left
-				$tmp_folder = APPPATH . 'tmp/' . $package . '-' . time();
-
-				$zip_file = $tmp_folder . '.zip';
-				@copy($zip_url, $zip_file);
-
-				break;
+				exit;
 			}
 		}
 
-		if ($package_found === TRUE)
+		throw new Exception('Could not find package "' . $package . '".');
+	}
+
+
+	public static function uninstall($package)
+	{
+		$package_folder = PKGPATH . $package;
+
+		// Check to see if this package is already installed
+		if (in_array($package, static::$protected))
 		{
-			\Cli::write('Installing package "' . $package . '"');
+			throw new Exception('Package "' . $package . '" cannot be uninstalled.');
+			return false;
 		}
 
-		else
+		// Check to see if this package is already installed
+		if ( ! is_dir($package_folder))
 		{
-			\Cli::write('Package "' . $package . '" could not be found.');
-			return;
+			throw new Exception('Package "' . $package . '" is not installed.');
+			return false;
 		}
+
+		\Cli::write('Uninstalling package "' . $package . '"', 'yellow');
+
+		\File::delete_dir($package_folder);
+	}
+
+	public static function help()
+	{
+		\Cli::write('Help coming soon!', 'blue');
+	}
+
+
+	private static function _use_git()
+	{
+		exec('which git', $output);
+
+		// If this is a valid path to git, use it instead of just "git"
+		if (file_exists($line = trim(current($output))))
+		{
+			static::$git = $line;
+		}
+
+		unset($output);
+
+		// Double check git is installed (windows will fail step 1)
+		exec(static::$git . ' --version', $output);
+
+		preg_match('#^(git version)#', current($output), $matches);
+
+		// If we have a match, use Git!
+		return ! empty($matches[0]);
+	}
+
+	private static function _download_package_zip($zip_url, $package, $version)
+	{
+		\Cli::write('Downloading package: ' . $zip_url);
 
 		// Make the folder so we can extract the ZIP to it
-		mkdir($tmp_folder);
+		mkdir($tmp_folder = APPPATH . 'tmp/' . $package . '-' . time());
+
+		$zip_file = $tmp_folder . '.zip';
+		@copy($zip_url, $zip_file);
 
 		$unzip = new \Unzip;
 		$files = $unzip->extract($zip_file, $tmp_folder);
@@ -99,26 +157,25 @@ class Package
 		{
 			$path = str_replace($tmp_package_folder, $package_folder, $file);
 			chmod($path, octdec(755));
-			\Cli::write("\t" . $path);
+			\Cli::write("\t" . \Fuel::clean_path($path));
 		}
 	}
 
-
-	public function uninstall($package)
+	public static function _clone_package_repo($source, $package, $version)
 	{
+		$repo_url = 'git://' . rtrim($source, '/').'/fuel-'.$package . '.git';
+
+		\Cli::write('Downloading package: ' . $repo_url);
+
 		$package_folder = PKGPATH . $package;
 
-		// Check to see if this package is already installed
-		if ( ! is_dir($package_folder))
-		{
-			\Cli::write(\Cli::color('Package "' . $package . '" is not installed.', 'red'));
-			return;
-		}
+		// Clone to the package path
+		passthru(static::$git . ' clone ' . $repo_url . ' ' . $package_folder);
 
-		\Cli::write('Uninstalling package "' . $package . '"');
+		passthru(static::$git .' add ' . $package_folder . '/');
 
-		\File::delete_dir($package_folder);
+		\Cli::write('');
 	}
 }
 
-/* End of file model.php */
+/* End of file package.php */

@@ -54,7 +54,7 @@ class Model {
 	 * @param	srray		$options	the find options
 	 * @return	object		the result
 	 */
-	public static function find($id, $options = array())
+	public static function find($id = 'all', $options = array())
 	{
 		$instance = new static;
 		$results = $instance->run_find($id, $options);
@@ -915,6 +915,14 @@ class Model {
 				{
 					foreach ($cols as $key => $col)
 					{
+                                                // Compare the values currently in $select to see if we need to remove them
+                                                if($this->table_name == $table){
+                                                        $foundKey=array_search($col,$select);
+                                                        if($foundKey !== false){
+                                                                unset($select[$foundKey]);
+                                                        }
+                                                }
+
 						// Add this to the select array
 						array_push($select, array($table.'.'.$col, "t{$table_key}_r$key"));
 
