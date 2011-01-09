@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+    	<meta charset="utf-8">
         <title>Stationwagon<?php echo isset($title) ? ' - '.$title : null; ?></title>
         <?php echo Asset::css('style.css'); ?>
     </head>
