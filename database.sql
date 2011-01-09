@@ -29,16 +29,7 @@ CREATE TABLE `sw_articles` (
   `body` text,
   `created_time` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
-
-LOCK TABLES `sw_articles` WRITE;
-/*!40000 ALTER TABLE `sw_articles` DISABLE KEYS */;
-INSERT INTO `sw_articles` (`id`,`category_id`,`title`,`body`,`created_time`)
-VALUES
-	(1,NULL,NULL,NULL,NULL);
-
-/*!40000 ALTER TABLE `sw_articles` ENABLE KEYS */;
-UNLOCK TABLES;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 
 # Dump of table sw_categories
@@ -52,7 +43,7 @@ CREATE TABLE `sw_categories` (
   `description` tinytext,
   `created_time` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci
 
 
 
