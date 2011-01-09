@@ -90,7 +90,7 @@ class Controller_Categories extends Controller_Template {
     
     public function action_delete($id)
     {
-        Model_Category::find($id)->destroy();
+        Model_Category::delete($id);
         
         Output::redirect('categories/index');
     }

@@ -96,7 +96,7 @@ class Controller_Articles extends Controller_Template {
     
     public function action_delete($id)
     {
-        Model_Article::find($id)->destroy();
+        Model_Article::find($id)->delete();
         
         Output::redirect('articles/index');
     }
