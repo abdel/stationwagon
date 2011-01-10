@@ -29,7 +29,7 @@
         
         <div class="footer">
             <div class="top">Page renedered in {exec_time}s | Memory Usage {mem_usage}MB</div>
-            <div class="bottom">Developed by <a href="http://twitter.com/abdel_m">Abdelrahman Mahmoud</a> 
+            <div class="bottom">Developed by <a href="http://aplusm.me">Abdelrahman Mahmoud</a> 
                 and <a href="http://twitter.com/Alfie_Rivera">Alfredo Rivera</a>.</div>
         </div>
     </body>
