@@ -1,8 +1,6 @@
 <?php
 
 class Controller_Articles extends Controller_Template {
-
-	public $template = 'layout';
 	
     public function action_index()
     {   
@@ -39,9 +37,9 @@ class Controller_Articles extends Controller_Template {
             if ( $add_article->run() == TRUE )
             {
                 $article = new Model_Article(array(
-                    'category_id' => Input::post('category_id'),
-                    'title' => Input::post('title'),
-                    'body' => Input::post('body'),
+                    'category_id' => $add_article->validated('category_id'),
+                    'title' => $add_article->validated('title'),
+                    'body' => $add_article->validated('body'),
                     'created_time' => time(),
                 ));
 
@@ -74,9 +72,9 @@ class Controller_Articles extends Controller_Template {
             
             if ( $edit_article->run() == TRUE )
             {
-                $article->category_id = Input::post('category_id');
-                $article->title = Input::post('title');
-                $article->body = Input::post('body');
+                $article->category_id = $edit_article->validated('category_id');
+                $article->title = $edit_article->validated('title');
+                $article->body = $edit_article->validated('body');
                 $article->save();
 
                 Session::set_flash('message', 'Article successfully updated.');
