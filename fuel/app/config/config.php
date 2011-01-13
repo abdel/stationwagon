@@ -86,7 +86,12 @@ return array(
 		'csrf_autoload'			=> true,
 		'csrf_token_key'		=> 'fuel_csrf_token',
 		'csrf_expiration'		=> 0,
+<<<<<<< HEAD
 		'input_filter'			=> array(),
+=======
+		'uri_filter'			=> array('htmlentities'),
+		'input_filter'			=> array('htmlentities'),
+>>>>>>> upstream/develop
 	),
 
 	/**

@@ -2,6 +2,8 @@
 
 class Controller_Articles extends Controller_Template {
 
+	public $template = 'layout';
+	
     public function action_index()
     {   
         $total_articles = count(Model_Article::find('all'));
