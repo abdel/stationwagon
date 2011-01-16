@@ -30,14 +30,14 @@ namespace Fuel\Core;
  */
 class Validation {
 
-	public static function factory($fieldset)
+	public static function factory($fieldset = 'default')
 	{
 		if ( ! $fieldset instanceof Fieldset)
 		{
 			$fieldset = (string) $fieldset;
 			($set = \Fieldset::instance($fieldset)) && $fieldset = $set;
 		}
-		return new Validation($fieldset);
+		return new static($fieldset);
 	}
 
 	public static function instance($name = null)
@@ -175,7 +175,7 @@ class Validation {
 	{
 		if ( ! (is_object($class) || class_exists($class)))
 		{
-			throw new \Fuel_Exception('Input for add_callable is not a valid object or class.');
+			throw new \Exception('Input for add_callable is not a valid object or class.');
 		}
 
 		array_unshift($this->callables, $class);

@@ -167,8 +167,7 @@ class View {
 		}
 		catch (\Exception $e)
 		{
-			// Display the exception message
-			// TODO: Write the exception Handler
+			\Error::exception_handler($e);
 
 			return '';
 		}
@@ -206,8 +205,6 @@ class View {
 		}
 		catch (\Exception $e)
 		{
-			die('Error in view: '.$view_filename);
-
 			// Delete the output buffer
 			ob_end_clean();
 
