@@ -31,6 +31,7 @@ class Controller_Articles extends Controller_Template {
         if ( Input::method() == 'POST' )
         {
             $add_article = Validation::factory('add_article');
+            $add_article->add('category_id', 'Category')->add_rule('required');
             $add_article->add('title', 'Title')->add_rule('required');
             $add_article->add('body', 'Body')->add_rule('required');
             
@@ -67,6 +68,7 @@ class Controller_Articles extends Controller_Template {
         if ( Input::method() == 'POST' )
         {
             $edit_article = Validation::factory('edit_article');
+            $edit_article->add('category_id')->add_rule('required');
             $edit_article->add('title')->add_rule('required');
             $edit_article->add('body')->add_rule('required');
             
