@@ -1,7 +1,12 @@
 <?php
 
-class Controller_Categories extends Controller_Template {
-
+class Controller_Categories extends \Controller_User {
+	
+	public function before()
+    {
+        parent::before();
+    }
+    
     public function action_index()
     {
         $total_categories = count(Model_Category::find('all'));

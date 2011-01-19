@@ -27,5 +27,5 @@
 <div style="text-align:center; padding-top: 10px;"><?php echo Pagination::create_links(); ?></div>
 
 <?php else: ?>
-<p>You did not add any categories. <?php echo Html::anchor('categories/add', 'Add a Category'); ?>.</p>
+<p style="color: red;">You did not add any categories. <?php echo Html::anchor('categories/add', 'Add a Category'); ?>.</p>
 <?php endif; ?>

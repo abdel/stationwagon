@@ -13,10 +13,16 @@
         
         <div class="header">
             <div class="menubar">
+				<?php if ( $logged_in ): ?>
                 <div class="menu_item"><?php echo Html::anchor('articles/index', 'All Articles'); ?></div>
                 <div class="menu_item"><?php echo Html::anchor('articles/add', 'Add Article'); ?></div>
                 <div class="menu_item"><?php echo Html::anchor('categories/index', 'All Categories'); ?></div>
                 <div class="menu_item"><?php echo Html::anchor('categories/add', 'Add Category'); ?></div>
+				<div class="menu_item"><?php echo Html::anchor('users/logout', 'Logout'); ?></div>
+				<?php else: ?>
+				<div class="menu_item"><?php echo Html::anchor('users/login', 'Login'); ?></div>
+				<div class="menu_item"><?php echo Html::anchor('users/signup', 'Sign Up'); ?></div>
+				<?php endif; ?>
             </div>
         </div>
         

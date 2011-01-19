@@ -98,7 +98,7 @@ return array(
 	 *      array(APPPATH.'modules'.DS)
 	 */
 	'module_paths' => array(
-		//APPPATH.'modules'.DS
+		APPPATH.'modules'.DS
 	),
 
 
@@ -121,6 +121,7 @@ return array(
 		 */
 		'packages'	=> array(
 			'activerecord',
+            'auth',
 		),
 
 		/**
@@ -166,8 +167,8 @@ return array(
 	'routes'	=> array(
 		// This is the default route.  We use a "#" here so that we do not have any
 		// reserved routes.
-		'#'		=> 'articles',
-		'404'	=> 'welcome/404',
+		'#'		=> 'users',
+		'404'	=> 'articles/404',
 	),
 );
 

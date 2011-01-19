@@ -1,9 +1,14 @@
 <?php
 
-class Controller_Articles extends Controller_Template {
+class Controller_Articles extends \Controller_User {
+	
+	public function before()
+    {
+        parent::before();
+    }
 	
     public function action_index()
-    {   
+    {
         $total_articles = count(Model_Article::find('all'));
         
         Pagination::set_config(array(
@@ -102,4 +107,9 @@ class Controller_Articles extends Controller_Template {
         
         Output::redirect('articles/index');
     }
+	
+	public function action_404()
+	{
+		$this->template->content = 'Not Found';
+	}
 }

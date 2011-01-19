@@ -31,5 +31,5 @@
 <div style="text-align:center; padding-top: 10px;"><?php echo Pagination::create_links(); ?></div>
 
 <?php else: ?>
-<p>You did not add any articles. <?php echo Html::anchor('articles/add', 'Add an Article'); ?>.</p>
+<p style="color: red;">You did not add any articles. <?php echo Html::anchor('articles/add', 'Add an Article'); ?>.</p>
 <?php endif; ?>
