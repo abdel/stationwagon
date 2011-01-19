@@ -18,15 +18,18 @@ var nav = {
 			"Download":		"installation/download.html"
 		},
 		"General": {
+			"Model-View-Controller":	"general/mvc.html",
 			"Controllers": {
 				"Base" :		"general/controllers/base.html",
 				"Template":		"general/controllers/template.html",
 				"Rest":			"general/controllers/rest.html"
 			},
-			"Routing":			"general/routing.html",
+			"Models":			"general/models.html",
 			"Views":			"general/views.html",
+			"ViewModels":		"general/viewmodels.html",
+			"Routing":			"general/routing.html",
 			"Classes": {
-				"Introduction":	"general/classes.html",
+				"Introduction":		"general/classes.html",
 				"Extending Core":	"general/extending_core.html"
 			},
 			"Tasks":			"general/tasks.html",

@@ -19,12 +19,6 @@ use \DB;
 
 class HasMany extends Association {
 
-	public function __construct(&$source, $dest, $options=null)
-	{
-		parent::__construct($source, $dest, $options);
-		$this->foreign_key = \Inflector::foreign_key($this->source_class);
-	}
-
 	public function push($args, &$source)
 	{
 		foreach ($args as $object)
@@ -230,6 +224,8 @@ class HasMany extends Association {
 		}
 		else
 		{
+			$through_foreign_key = array_key_exists('through_foreign_key', $this->options)
+				? $this->options['through_foreign_key'] : \Inflector::foreign_key($this->dest_class);
 			$join = array(
 				array(
 					'table'	=> $this->options['through'],
@@ -239,7 +235,7 @@ class HasMany extends Association {
 				array(
 					'table'	=> $dest_table,
 					'type'	=> 'LEFT OUTER',
-					'on'	=> array($dest_table.'.'.$dest_inst->get_primary_key(), '=', $this->options['through'].'.'.\Inflector::foreign_key($this->dest_class))
+					'on'	=> array($dest_table.'.'.$dest_inst->get_primary_key(), '=', $this->options['through'].'.'.$through_foreign_key)
 				)
 			);
 		}
