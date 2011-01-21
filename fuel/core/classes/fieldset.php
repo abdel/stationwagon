@@ -138,7 +138,7 @@ class Fieldset
 	{
 		if (empty($this->validation))
 		{
-			$this->validation = Validation::factory($this->name, $this);
+			$this->validation = Validation::factory($this);
 		}
 
 		return $this->validation;
@@ -153,7 +153,7 @@ class Fieldset
 	{
 		if (empty($this->form))
 		{
-			$this->form = Form::factory($this->name, $this);
+			$this->form = Form::factory($this);
 		}
 
 		return $this->form;

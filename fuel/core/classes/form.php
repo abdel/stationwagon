@@ -77,7 +77,7 @@ class Form {
 	 * @param   array   array of values
 	 * @return  void
 	 */
-	public static function init()
+	public static function _init()
 	{
 		\Config::load('form', true);
 
@@ -524,7 +524,7 @@ class Form {
 		unset($attributes['label']);
 		unset($attributes['id']);
 
-		return html_tag('label', $attributes, $label);
+		return html_tag('label', $attributes, __($label) ?: $label);
 	}
 
 	/**
@@ -779,7 +779,7 @@ class Form {
 			return $output;
 		}
 
-		return $this->fieldset->get_config($key, null) === null
+		return $this->fieldset->get_config($key, null) !== null
 			? $this->fieldset->get_config($key, $default)
 			: static::get_class_config($key, $default);
 	}
