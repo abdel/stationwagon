@@ -9,7 +9,7 @@ h2. Team
 
 h2. Installation
 
-# Import the *database.ql* to your database
+# Import the *database.sql* to your database
 # Modify the database information in _/fuel/app/config/db.php_
 
 h2. Learn?
