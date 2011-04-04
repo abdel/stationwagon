@@ -23,14 +23,14 @@ Since Fuel uses submodules for things like the **core** folder.  After you clone
 
 You can do the following to clone Stationwagon:
 
-	git clone --recursive git://github.com/abdelm/stationwagon.git
+	@git clone --recursive git://github.com/abdelm/stationwagon.git@
 	
 The above command is the same as running:
 
-	git clone git://github.com/abdelm/stationwagon.git
-	cd stationwagon/
-	git submodule init
-	git submodule update
+	@git clone git://github.com/abdelm/stationwagon.git@
+	@cd stationwagon/@
+	@git submodule init@
+	@git submodule update@
 	
 You can also shorten the last two commands to one:
 
@@ -40,13 +40,13 @@ h2. Installation
 
 After cloning Stationwagon using the steps above, you will do a few things to get Stationwagon up and running:
 
-# Import the *database.sql* to your database [1]
+# Import the **database.sql** to your database [1]
 # Change the database details in _/fuel/app/config/db.php_
 # That's it!
 
 If you want to use mod_rewrite, do the following changes in _/fuel/app/config/config.php_:
 
-	'index_file' => false,
+	@'index_file' => false,@
 	
 h2. Learning
 
@@ -61,5 +61,5 @@ There are a lot of examples on these classes:
 
 So, go ahead and download Stationwagon! If you would like to contribute, just fork the repo and make a pull request!
 
-[1]  *Make sure your existing tables match the current database.sql*
+[1] **Make sure your existing tables match the current database.sql**
 [2] Stationwagon now uses the new Orm package instead of the old ActiveRecord package.
