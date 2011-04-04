@@ -1,0 +1,44 @@
+@import "reset.css";
+@import "style.css";
+
+.filters
+{
+    padding-bottom: 10px;
+}
+
+.filters a
+{
+    display: inline;
+}
+
+.pagination
+{
+	text-align:center;
+	padding-top: 10px;
+}
+
+.result-messages
+{
+	padding-bottom: 5px;
+	margin-bottom: 5px;
+	border-bottom: 1px dashed #e5e5e5;
+}
+
+.fork
+{
+	font-weight: normal;
+	font-size: 12px;
+}
+
+div.options
+{
+	padding-left: 10px;
+	padding-bottom: 10px;
+}
+
+div.option
+{
+	font-weight: bold;
+	display: inline;
+	padding-right: 10px;
+}
