@@ -59,7 +59,11 @@ There are a lot of examples on these classes:
 # Validation
 # and more!
 
-So, go ahead and download Stationwagon! If you would like to contribute, just fork the repo and make a pull request!
+h2. Contribute
 
-[1]  **Make sure your existing tables match the current database.sql**
+If you are interested in adding more features to Stationwagon, fork the repository and make sure you make a pull request after you pushed changes to your Stationwagon fork.
+
+To report any bugs or problems, create a new issue here in our GitHub repository.
+
+[1] Make sure your existing tables match the current **database.sql**
 [2] Stationwagon now uses the new Orm package instead of the old ActiveRecord package.
