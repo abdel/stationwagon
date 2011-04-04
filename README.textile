@@ -61,5 +61,5 @@ There are a lot of examples on these classes:
 
 So, go ahead and download Stationwagon! If you would like to contribute, just fork the repo and make a pull request!
 
-[1] **Make sure your existing tables match the current database.sql**
+[1]  **Make sure your existing tables match the current database.sql**
 [2] Stationwagon now uses the new Orm package instead of the old ActiveRecord package.
