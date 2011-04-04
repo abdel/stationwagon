@@ -1,8 +1,8 @@
 h1. Stationwagon
 
-* "Stationwagon on FuelPHP Forums":http://fuelphp.com/forums/topics/view/326
 * Version: 1.0.3
 * Fuel Version: 1.0.0-RC1
+* "Stationwagon on FuelPHP Forums":http://fuelphp.com/forums/topics/view/326
 
 h2. Description
 
@@ -10,8 +10,8 @@ Stationwagon is a Fuel-powered blog application. The purpose of this application
 
 h2. Developers
 
-# "Abdelrahman Mahmoud":http://aplusm.me/ - Lead Developer
-# "Alfredo Rivera":http://twitter.com/Alfie_Rivera - Developer
+* "Abdelrahman Mahmoud":http://aplusm.me/ - Lead Developer
+* "Alfredo Rivera":http://twitter.com/Alfie_Rivera - Developer
 
 h2. Downloading Stationwagon
 
@@ -34,7 +34,7 @@ The above command is the same as running:
 	
 You can also shorten the last two commands to one:
 
-	git submodule update --init
+	@git submodule update --init@
 
 h2. Installation
 
@@ -61,5 +61,5 @@ There are a lot of examples on these classes:
 
 So, go ahead and download Stationwagon! If you would like to contribute, just fork the repo and make a pull request!
 
-[1] *Make sure your existing tables match the current database.sql*
+[1]  *Make sure your existing tables match the current database.sql*
 [2] Stationwagon now uses the new Orm package instead of the old ActiveRecord package.
