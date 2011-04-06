@@ -42,6 +42,8 @@ After cloning Stationwagon using the steps above, you will do a few things to ge
 
 # Import the **database.sql** to your database [1]
 # Change the database details in _/fuel/app/config/db.php_
+# Change the table name in _/fuel/packages/auth/config/simpleauth.php_
+	@'table_name' => 'users'@
 # That's it!
 
 If you want to use mod_rewrite, do the following changes in _/fuel/app/config/config.php_:
