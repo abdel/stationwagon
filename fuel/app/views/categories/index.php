@@ -24,7 +24,7 @@
         <td width="5%"><?php echo $category->id; ?></td>
         <td><?php echo $category->name; ?></td>
         <td><?php echo $category->description; ?></td>
-        <td width="11%"><?php echo Date::Factory($category->created_time)->format("%m/%d/%Y"); ?></td>
+        <td width="11%"><?php echo Date::Factory($category->created_at)->format("%m/%d/%Y"); ?></td>
         <td width="11%">
             <?php echo Html::anchor('categories/edit/'.$category->id, 'edit'); ?> /
             <?php echo Html::anchor('categories/delete/'.$category->id, 'delete'); ?>

@@ -49,7 +49,6 @@ class Controller_Categories extends Controller_Common {
 				'user_id' => $this->user_id,
 				'name' => $val->validated('name'),
 				'description' => $val->validated('description'),
-				'created_time' => Date::factory()->get_timestamp(),
 			));
 			
 			// Save

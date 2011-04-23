@@ -37,7 +37,7 @@ class Controller_Articles extends Controller_Common {
 		$articles = Model_Article::find('all', array(
 			'offset' => Pagination::$offset,
 			'limit' => Pagination::$per_page,
-			'include' => 'category',
+			'related' => 'category',
 			'where' => array(
 				array('user_id', '=', $this->user_id),
 				array('published', '=', $published),
@@ -83,7 +83,6 @@ class Controller_Articles extends Controller_Common {
 				'category_id' => $category_id,
 				'title' => $val->validated('title'),
 				'body' => $val->validated('body'),
-				'created_time' => Date::factory()->get_timestamp(),
 				'published' => $status,
 			));
 			

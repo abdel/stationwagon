@@ -40,7 +40,7 @@
 			<?php echo Html::anchor('articles/publish/'.$article->id, 'Draft', array('title' => 'Click to Publish')); ?>
 			<?php endif; ?>
 		</td>
-		<td width="11%"><?php echo Date::Factory($article->created_time)->format("%d/%m/%Y"); ?></td>
+		<td width="11%"><?php echo Date::Factory($article->created_at)->format("%d/%m/%Y"); ?></td>
 		<td width="11%">
 			<?php echo Html::anchor('articles/edit/'.$article->id, 'edit'); ?> /
      		<?php echo Html::anchor('articles/delete/'.$article->id, 'delete'); ?>
