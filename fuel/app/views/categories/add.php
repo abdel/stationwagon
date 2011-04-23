@@ -15,7 +15,7 @@
 </div>
 
 <div class="input textarea">
-    <?php echo Form::label('Description', 'descripton'); ?>
+    <?php echo Form::label('Description', 'description'); ?>
     <?php echo Form::textarea('description', $val->input('description'), array('rows' => 4, 'cols' => 40)); ?>
 </div>
 
