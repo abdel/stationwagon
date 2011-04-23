@@ -18,13 +18,13 @@ CREATE TABLE `sw_users` (
 DROP TABLE IF EXISTS `sw_articles`;
 
 CREATE TABLE `sw_articles` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) unsigned NOT NULL DEFAULT '0',
-  `category_id` int(11) DEFAULT NULL,
-  `title` varchar(140) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `body` text COLLATE utf8_unicode_ci,
-  `published` tinyint(3) unsigned NOT NULL DEFAULT '0',
-  `created_time` bigint(20) unsigned DEFAULT NULL,
+	`id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+	`user_id` int(11) unsigned NOT NULL DEFAULT '0',
+	`category_id` int(11) DEFAULT NULL,
+	`title` varchar(140) COLLATE utf8_unicode_ci DEFAULT NULL,
+	`body` text COLLATE utf8_unicode_ci,
+	`published` tinyint(3) unsigned NOT NULL DEFAULT '0',
+	`created_time` bigint(20) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
