@@ -2,11 +2,6 @@
 
 class Controller_Articles extends Controller_Common {
 	
-	public function before()
-	{
-		parent::before();
-	}
-	
 	public function action_index($show = 'published')
 	{
 		if ($show === 'published')

@@ -2,11 +2,6 @@
 
 class Controller_Users extends Controller_Common {
 	
-	public function before()
-	{
-		parent::before();
-	}
-	
 	public function action_index()
 	{
 		$this->template->title = 'Welcome';

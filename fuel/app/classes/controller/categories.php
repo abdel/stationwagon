@@ -2,11 +2,6 @@
 
 class Controller_Categories extends Controller_Common {
 	
-	public function before()
-	{
-		parent::before();
-	}
-	
 	public function action_index()
 	{
 		// Get total categories
