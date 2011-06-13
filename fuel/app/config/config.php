@@ -63,6 +63,8 @@ return array(
 
 	'locale'		=> 'en_US',
 
+	'encoding'		=> 'UTF-8',
+	
 	/**
 	 * DateTime settings
 	 *
@@ -70,6 +72,8 @@ return array(
 	 * default_timezone		optional, if you want to change the server's default timezone
 	 */
 	'server_gmt_offset'	=> 0,
+	
+	'default_timezone'	=> 'UTC',
 
 	/**
 	 * Logging Threshold.  Can be set to any of the following:
@@ -110,7 +114,38 @@ return array(
 		 * With output encoding switched on all objects passed will be converted to strings or
 		 * throw exceptions unless they are instances of the classes in this array.
 		 */
-		'whitelisted_classes' => array('Fuel\\Core\\View', 'Fuel\\Core\\ViewModel', 'Closure')
+		'whitelisted_classes' => array('stdClass', 'Fuel\\Core\\View', 'Fuel\\Core\\ViewModel', 'Closure')
+	),
+
+	/**
+	 * Cookie settings
+	 */
+	'cookie' => array(
+
+		/**
+		 * Number of seconds before the cookie expires
+		 */
+		'expiration'            => 0,
+
+		/**
+		 * Restrict the path that the cookie is available to
+		 */
+		'path'                  => '/',
+
+		/**
+		 * Restrict the domain that the cookie is available to
+		 */
+		'domain'                => null,
+
+		/**
+		 * Only transmit cookies over secure connections
+		 */
+		'secure'                => false,
+
+		/**
+		 * Only transmit cookies over HTTP, disabling Javascript access
+		 */
+		'http_only'             => false,
 	),
 
 	/**
