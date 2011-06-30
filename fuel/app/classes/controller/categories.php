@@ -2,10 +2,12 @@
 
 class Controller_Categories extends Controller_Common {
 	
-	public function action_index()
+    public function action_index()
 	{
 		// Get total categories
-		$total_categories = Model_Category::find()->where('user_id', $this->user_id)->count();
+        $total_categories = Model_Category::find()
+            ->where('user_id', $this->user_id)
+            ->count();
 		
 		// Setup pagination
 		Config::set('pagination', array(
