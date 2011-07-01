@@ -1,9 +1,13 @@
-<h2>My Articles</h2>
+<h2>Articles</h2>
 <p>Manage your existing articles or add new ones.</p>
 
 <div class="options">
-	<div class="option"><?php echo Html::anchor('articles/add', 'Add an Article'); ?></div>
-	<div class="option"><?php echo Html::anchor('categories', 'View Categories'); ?></div>
+    <div class="option">
+        <?php echo Html::anchor('articles/add', 'Add an Article'); ?>
+    </div>
+    <div class="option">
+        <?php echo Html::anchor('categories', 'View Categories'); ?>
+    </div>
 </div>
 
 <div class="filters">
