@@ -90,8 +90,9 @@ abstract class Auth_Login_Driver extends \Auth_Driver {
 	final public function get_user_array(Array $additional_fields = array())
 	{
 		$user = array(
-			'email'			=> $this->get_email(),
-			'screen_name'	=> $this->get_screen_name()
+			'email'        => $this->get_email(),
+			'screen_name'  => $this->get_screen_name(),
+			'groups'       => $this->get_groups(),
 		);
 
 		$additional_fields = array_merge($this->config['additional_fields'], $additional_fields);

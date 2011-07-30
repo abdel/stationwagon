@@ -1,7 +1,7 @@
 <?php
 return array(
-	'_root_'  => 'users/index',  // The default route
-	'_404_'   => 'common/404',    // The main 404 route
+	'_root_'  => 'welcome/index',  // The default route
+	'_404_'   => 'welcome/404',    // The main 404 route
 	
 	/**
 	 * This is an example of a BASIC named route (used in reverse routing).

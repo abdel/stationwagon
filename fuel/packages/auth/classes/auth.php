@@ -13,44 +13,43 @@
 namespace Auth;
 
 
-// ------------------------------------------------------------------------
+class AuthException extends \Fuel_Exception {}
+
 
 /**
  * Auth
  *
- * @package		Fuel
- * @subpackage	Auth
- * @author		Jelmer Schreuder
+ * @package     Fuel
+ * @subpackage  Auth
  */
-
 class Auth {
 
 	/**
-	 * @var	Auth_Login_Driver
+	 * @var  Auth_Login_Driver
 	 */
 	protected static $_instance = null;
 
 	/**
-	 * @var	array	contains references if multiple were loaded
+	 * @var  Array  contains references if multiple were loaded
 	 */
 	protected static $_instances = array();
 
 	/**
-	 * @var	array	Login drivers that verified a current login
+	 * @var  Array  Login drivers that verified a current login
 	 */
 	protected static $_verified = array();
 
 	/**
-	 * @var	bool	Whether to verify multiple
+	 * @var  bool  Whether to verify multiple
 	 */
 	protected static $_verify_multiple = false;
 
 	/**
-	 * @var	array	subdriver registry, takes driver name and method for checking it
+	 * @var  Array  subdriver registry, takes driver name and method for checking it
 	 */
 	protected static $_drivers = array(
-		'group'	=> 'member',
-		'acl'	=> 'has_access',
+		'group'  => 'member',
+		'acl'    => 'has_access',
 	);
 
 	public static function _init()
@@ -78,8 +77,8 @@ class Auth {
 	/**
 	 * Load a login driver to the array of loaded drivers
 	 *
-	 * @param	array			settings for the new driver
-	 * @throws	Auth_Exception	on driver load failure
+	 * @param   Array  settings for the new driver
+	 * @throws  AuthException  on driver load failure
 	 */
 	public static function factory($custom = array())
 	{
@@ -91,7 +90,7 @@ class Auth {
 		// Driver must be set
 		if (empty($config['driver']) || ! is_string($config['driver']))
 		{
-			throw new \Auth_Exception('No auth driver given.');
+			throw new \AuthException('No auth driver given.');
 		}
 
 		// determine the driver to load
@@ -107,7 +106,7 @@ class Auth {
 			$class = get_class($driver);
 			if ( ! static::$_instances[$id] instanceof $class)
 			{
-				throw new \Auth_Exception('You can not instantiate two different login drivers using the same id "'.$id.'"');
+				throw new \AuthException('You can not instantiate two different login drivers using the same id "'.$id.'"');
 			}
 		}
 		else
@@ -120,19 +119,15 @@ class Auth {
 	}
 
 	/**
-	 * class constructor
-	 *
-	 * @param	void
-	 * @access	private
-	 * @return	void
+	 * Prevent instantiation
 	 */
 	final private function __construct() {}
 
 	/**
 	 * Remove individual driver, or all drivers of $type
 	 *
-	 * @param	string	driver id or null for default driver
-	 * @throws	Auth_Exception	when $driver_id isn't valid or true
+	 * @param   string  driver id or null for default driver
+	 * @throws  AuthException  when $driver_id isn't valid or true
 	 */
 	public static function unload($driver_id = null)
 	{
@@ -154,8 +149,8 @@ class Auth {
 	/**
 	 * Return a specific driver, or the default instance (is created if necessary)
 	 *
-	 * @param	string	driver id
-	 * @return	Auth_Login_Driver
+	 * @param   string  driver id
+	 * @return  Auth_Login_Driver
 	 */
 	public static function instance($instance = null)
 	{
@@ -180,8 +175,8 @@ class Auth {
 	/**
 	 * Check login drivers for validated login
 	 *
-	 * @param	string|array	specific driver or drivers, in this case it will always terminate after first success
-	 * @return	bool
+	 * @param   string|Array  specific driver or drivers, in this case it will always terminate after first success
+	 * @return  bool
 	 */
 	public static function check($specific = null)
 	{
@@ -217,8 +212,8 @@ class Auth {
 	 * returns false when specific driver has not validated
 	 * when all were requested and none validated an empty array is returned
 	 *
-	 * @param	null|string	driver id or null for all verified driver in an array
-	 * @return	array|Auth_Login_Driver|false
+	 * @param   null|string  driver id or null for all verified driver in an array
+	 * @return  Array|Auth_Login_Driver|false
 	 */
 	public static function verified($driver = null)
 	{
@@ -251,7 +246,7 @@ class Auth {
 	/**
 	 * Register verified Login driver
 	 *
-	 * @param	Auth_Login_Driver
+	 * @param  Auth_Login_Driver
 	 */
 	public static function _register_verified(Auth_Login_Driver $driver)
 	{
@@ -261,7 +256,7 @@ class Auth {
 	/**
 	 * Unregister verified Login driver
 	 *
-	 * @param	Auth_Login_Driver
+	 * @param  Auth_Login_Driver
 	 */
 	public static function _unregister_verified(Auth_Login_Driver $driver)
 	{
@@ -271,9 +266,9 @@ class Auth {
 	/**
 	 * Register a new driver type
 	 *
-	 * @param	string	name of the driver type, may not conflict with class method name
-	 * @param	string	name of the method to use for checking this type of driver, also cannot conflict with method
-	 * @return	bool
+	 * @param   string  name of the driver type, may not conflict with class method name
+	 * @param   string  name of the method to use for checking this type of driver, also cannot conflict with method
+	 * @return  bool
 	 */
 	public static function register_driver_type($type, $check_method)
 	{
@@ -303,8 +298,8 @@ class Auth {
 	/**
 	 * Unregister a driver type
 	 *
-	 * @param	string	name of the driver type
-	 * @return	bool
+	 * @param   string  name of the driver type
+	 * @return  bool
 	 */
 	public static function unregister_driver_type($type)
 	{
@@ -321,10 +316,10 @@ class Auth {
 	/**
 	 * Magic method used to retrieve driver instances and check them for validity
 	 *
-	 * @param	string
-	 * @param	array
-	 * @return	mixed
-	 * @throws	Auth_Exception
+	 * @param   string
+	 * @param   array
+	 * @return  mixed
+	 * @throws  BadMethodCallException
 	 */
 	public static function __callStatic($method, $args)
 	{
@@ -342,16 +337,16 @@ class Auth {
 			return call_user_func_array(array(static::$_instance, $method), $args);
 		}
 
-		throw new \Auth_Exception('Invalid method.');
+		throw new \BadMethodCallException('Invalid method.');
 	}
 
 	/**
 	 * Retrieve a loaded driver instance
 	 * (loading must be done by other driver class)
 	 *
-	 * @param	string			driver type
-	 * @param	string|true		driver id or true for an array of all loaded drivers
-	 * @return	Auth_Driver|array
+	 * @param   string       driver type
+	 * @param   string|true  driver id or true for an array of all loaded drivers
+	 * @return  Auth_Driver|array
 	 */
 	protected static function _driver_instance($type, $instance)
 	{
@@ -362,11 +357,11 @@ class Auth {
 	/**
 	 * Check driver
 	 *
-	 * @param	string	driver type
-	 * @param	mixed	condition for which the driver is checked
-	 * @param	string	driver id or null to check all
-	 * @param	array	identifier to check, should default to current user or relation therof and be
-	 * 					in the form of array(driver_id, user_id)
+	 * @param   string  driver type
+	 * @param   mixed   condition for which the driver is checked
+	 * @param   string  driver id or null to check all
+	 * @param   Array   identifier to check, should default to current user or relation therof and be
+	 *                  in the form of array(driver_id, user_id)
 	 * @return bool
 	 */
 	public static function _driver_check($type, $condition, $driver = null, $entity = null)

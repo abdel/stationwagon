@@ -4,14 +4,7 @@ class Controller_Articles extends Controller_Common {
 
 	public function action_index($show = 'published')
     {
-		if ($show === 'published')
-		{
-			$published = 1;
-		}
-		else
-		{
-			$published = 0;
-		}
+        $published = (($show === 'published') ? 1 : 0);
 		
 		// Get total articles
 		$total_articles = Model_Article::find()
@@ -47,24 +40,14 @@ class Controller_Articles extends Controller_Common {
 	}
 	
 	public function action_add()
-	{
-		$val = Validation::factory('add_article');
-		$val->add('category_id', 'Category');
-		$val->add('title', 'Title')->add_rule('required');
-		$val->add('body', 'Body')->add_rule('required');
-		
+    {
+        $val = Model_Article::validate('add_article');
+				
 		if ($val->run())
-		{
-			if (Input::post('save_draft'))
-			{
-				$status = 0;
-			}
-			else
-			{
-				$status = 1;
-			}
-			
-			if (!$val->input('category_id'))
+        {
+            $status = (Input::post('save_draft') ? 0 : 1);
+
+			if ( ! $val->input('category_id'))
 			{
 				$category_id = null;
 			}
@@ -103,10 +86,7 @@ class Controller_Articles extends Controller_Common {
 	{
 		$article = Model_Article::find_by_id_and_user_id($id, $this->user_id);
 		
-		$val = Validation::factory('edit_article');
-		$val->add('category_id');
-		$val->add('title')->add_rule('required');
-		$val->add('body')->add_rule('required');
+		$val = Model_Article::validate('edit_article');
 		
 		if ($val->run())
 		{

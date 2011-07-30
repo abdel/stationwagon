@@ -44,7 +44,12 @@ class Controller_Users extends Controller_Common {
                 throw new Exception('An unexpected error occurred.'.
                     ' Please try again.');
 			}
-		}
+        }
+        else
+        {
+            $val->set_message('valid_email', 'The field :label is not a valid'.
+                ' email address.');
+        }
 		
 		$this->template->title = 'Sign Up';
 		$this->template->content = View::factory('users/signup')

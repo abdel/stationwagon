@@ -11,7 +11,7 @@
 
 <div class="input password required">
     <?php echo Form::label('Password', 'password'); ?>
-    <?php echo Form::password('password', NULL, array('size' => 30)); ?>
+    <?php echo Form::password('password', null, array('size' => 30)); ?>
 </div>
 
 <div class="input submit">
