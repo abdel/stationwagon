@@ -41,7 +41,7 @@ return array(
 	 *
 	 * Set this to false or remove if you using mod_rewrite.
 	 */
-	'index_file'	=> 'index.php',
+	'index_file'	=> false,
 
 	/**
 	 * Your environment.  Can be set to any of the following:
@@ -189,7 +189,8 @@ return array(
 		 * );
 		 */
 		'packages'	=> array(
-			//'orm',
+            'orm',
+            'auth',
 		),
 
 		/**

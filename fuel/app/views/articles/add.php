@@ -2,8 +2,12 @@
 <p>Publish a new article by filling the form below.</p>
 
 <div class="options">
-	<div class="option"><?php echo Html::anchor('articles', 'View Articles'); ?></div>
-	<div class="option"><?php echo Html::anchor('categories/add', 'Add a Category'); ?></div>
+    <div class="option">
+            <?php echo Html::anchor('articles', 'View Articles'); ?>
+    </div>
+    <div class="option">
+        <?php echo Html::anchor('categories/add', 'Add a Category'); ?>
+    </div>
 </div>
 
 <?php echo $val->show_errors(); ?>
@@ -16,17 +20,20 @@
 
 <div class="input select">
     <?php echo Form::label('Category', 'category_id'); ?>
-	<?php echo Form::select('category_id', e($val->input('category_id')), $select_categories); ?>
+    <?php echo Form::select('category_id', e($val->input('category_id')), 
+        $select_categories); ?>
 </div>
 
 <div class="input text required">
     <?php echo Form::label('Title', 'title'); ?>
-    <?php echo Form::input('title', e($val->input('title')), array('size' => '30')); ?>
+    <?php echo Form::input('title', e($val->input('title')), 
+        array('size' => '30')); ?>
 </div>
 
 <div class="input textarea required">
     <?php echo Form::label('Body', 'body'); ?>
-    <?php echo Form::textarea('body', e($val->input('body')), array('rows' => 4, 'cols' => 40)); ?>
+    <?php echo Form::textarea('body', e($val->input('body')), 
+        array('rows' => 4, 'cols' => 40)); ?>
 </div>
 
 <div class="input submit">

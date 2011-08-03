@@ -1,7 +1,9 @@
 <?php
 
 class Controller_Common extends Controller_Template {
-	
+
+    public $template = 'common/layout';
+
 	public function before()
 	{
         parent::before();
@@ -45,7 +47,7 @@ class Controller_Common extends Controller_Template {
 		
 		// Set a HTTP 404 output header
 		$this->response->status = 404;
-		$this->template->content = View::factory('404', $data);
+		$this->template->content = View::factory('common/404', $data);
 	}
 }
 

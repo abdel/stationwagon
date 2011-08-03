@@ -2,8 +2,12 @@
 <p>Modify the article's details using the form below.</p>
 
 <div class="options">
-	<div class="option"><?php echo Html::anchor('articles', 'View Articles'); ?></div>
-	<div class="option"><?php echo Html::anchor('categories', 'View Categories'); ?></div>
+    <div class="option">
+        <?php echo Html::anchor('articles', 'View Articles'); ?>
+    </div>
+    <div class="option">
+        <?php echo Html::anchor('categories', 'View Categories'); ?>
+    </div>
 </div>
 	
 <?php echo $val->show_errors(); ?>
@@ -16,7 +20,8 @@
 
 <div class="input select">
     <?php echo Form::label('Category', 'category_id'); ?>
-	<?php echo Form::select('category_id', e($article->category_id), $select_categories); ?>
+    <?php echo Form::select('category_id', e($article->category_id), 
+        $select_categories); ?>
 </div>
 
 <div class="input text required">
@@ -26,7 +31,8 @@
 
 <div class="input textarea required">
     <?php echo Form::label('Body', 'body'); ?>
-    <?php echo Form::textarea('body', e($article->body), array('cols' => 40, 'rows' => 4)); ?>
+    <?php echo Form::textarea('body', e($article->body), 
+        array('cols' => 40, 'rows' => 4)); ?>
 </div>
 
 <div class="input submit">

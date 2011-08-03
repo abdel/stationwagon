@@ -1,0 +1,74 @@
+@import "reset.css";
+@import "main.css";
+@import "uniform.css";
+
+.filters {
+	padding-bottom: 10px;
+}
+
+.filters a {
+	display: inline;
+}
+
+.pagination {
+	text-align:center;
+	padding-top: 10px;
+}
+
+.result-messages {
+	padding-bottom: 45px;
+    margin-bottom: 5px;
+	border-bottom: 1px dashed #dedede;
+    width: 800px;
+}
+
+div.options {
+	padding-left: 10px;
+	padding-bottom: 10px;
+}
+
+div.option {
+	font-weight: bold;
+	display: inline;
+	padding-right: 10px;
+}
+
+#center {
+	text-align: center;
+}
+
+h1.headline {
+	font-family: "Warnock Pro", "Goudy Old Style","Palatino","Book Antiqua", Georgia, serif;
+	font-style: italic;
+	font-weight: normal;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #dedede;
+	text-align: center;
+}
+
+h1.headline.no-border {
+	border-bottom: 0px;
+}
+
+div.features {
+	padding-top: 10px;
+	margin-bottom: 10px;
+	border-bottom: 1px solid #dedede;
+}
+
+div.features div.feature {
+	border-right: 1px solid #dedede;
+	width: 230px;
+	padding-left: 10px;
+	margin-bottom: 10px;
+	display: inline-block;
+}
+
+div.features div.feature.last {
+	border-right: none;
+}
+
+div.version {
+	font-size: 11px;
+	padding-top: 10px;
+}
