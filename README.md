@@ -1,7 +1,7 @@
 # Stationwagon
 
-* Version: 1.1
-* Fuel Version: 1.0-RC3
+* Version: 1.2
+* Fuel Version: 1.0
 * [Stationwagon on FuelPHP Forums](http://fuelphp.com/forums/topics/view/326)
 
 ## Description
