@@ -70,7 +70,8 @@ class Controller_Articles extends Controller_Common {
 			}
 			else
 			{
-				Session::set_flash('error', 'Something went wrong, please try again!');
+                Session::set_flash('error', 'Something went wrong, '.
+                    'please try again!');
 			}
 			
 			Response::redirect('articles/add');
@@ -109,7 +110,8 @@ class Controller_Articles extends Controller_Common {
 			}
 			else
 			{
-				Session::set_flash('error', 'Something went wrong, please try again!');
+                Session::set_flash('error', 'Something went wrong, '.
+                    'please try again!');
 			}
 			
 			Response::redirect('articles/edit/'.$article->id);

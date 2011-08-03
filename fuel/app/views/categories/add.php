@@ -20,7 +20,10 @@
 </div>
 
 <div class="input submit">
-    <?php echo Form::submit(array('value' => 'Add Category')); ?>
+    <?php echo Form::submit(array(
+        'name' => 'category_add', 
+        'value' => 'Add Category',
+    )); ?>
 </div>
 
 <?php echo Form::close(); ?>

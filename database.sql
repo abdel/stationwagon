@@ -1,6 +1,6 @@
-DROP TABLE IF EXISTS `sw_users`;
+DROP TABLE IF EXISTS `users`;
 
-CREATE TABLE `sw_users` (
+CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(50) COLLATE utf8_unicode_ci DEFAULT NULL,
   `password` varchar(60) COLLATE utf8_unicode_ci DEFAULT NULL,
@@ -15,9 +15,9 @@ CREATE TABLE `sw_users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 
-DROP TABLE IF EXISTS `sw_articles`;
+DROP TABLE IF EXISTS `articles`;
 
-CREATE TABLE `sw_articles` (
+CREATE TABLE `articles` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int(11) unsigned NOT NULL DEFAULT '0',
   `category_id` int(11) DEFAULT NULL,
@@ -30,9 +30,9 @@ CREATE TABLE `sw_articles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 
-DROP TABLE IF EXISTS `sw_categories`;
+DROP TABLE IF EXISTS `categories`;
 
-CREATE TABLE `sw_categories` (
+CREATE TABLE `categories` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) unsigned NOT NULL DEFAULT '0',
   `name` varchar(140) COLLATE utf8_unicode_ci DEFAULT NULL,

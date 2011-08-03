@@ -37,7 +37,10 @@ class Controller_Common extends Controller_Template {
 	
 	public function action_404()
 	{
-		$messages = array('Aw, crap!', 'Bloody Hell!', 'Uh Oh!', 'Nope, not here.', 'Huh?');
+        $messages = array('
+            Aw, crap!', 'Bloody Hell!', 'Uh Oh!', 'Nope, not here.', 'Huh?'
+        );
+
 		$data['title'] = $messages[array_rand($messages)];
 		
 		// Set a HTTP 404 output header

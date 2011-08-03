@@ -10,7 +10,7 @@ class Model_Article extends Orm\Model {
 	);
 	
 	protected static $_properties = array(
-		'id', 
+		'id',
 		'user_id',
 		'category_id',
 		'title',

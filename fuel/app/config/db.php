@@ -22,7 +22,7 @@ return array(
 			'password'   => '',
 			'persistent' => false,
 		),
-		'table_prefix' => 'sw_',
+		'table_prefix' => '',
 		'charset'      => 'utf8',
 		'caching'      => false,
 		'profiling'    => false,
@@ -32,7 +32,7 @@ return array(
 		'type'			=> 'mysql',
 		'connection'	=> array(
 			'hostname'   => 'localhost',
-			'database'   => 'fuel_prod',
+			'database'   => 'stationwagon',
 			'username'   => 'root',
 			'password'   => '',
 			'persistent' => false,
@@ -47,7 +47,7 @@ return array(
 		'type'			=> 'mysql',
 		'connection'	=> array(
 			'hostname'   => 'localhost',
-			'database'   => 'fuel_test',
+			'database'   => 'stationwagon',
 			'username'   => 'root',
 			'password'   => '',
 			'persistent' => false,
@@ -62,7 +62,7 @@ return array(
 		'type'			=> 'mysql',
 		'connection'	=> array(
 			'hostname'   => 'localhost',
-			'database'   => 'fuel_stage',
+			'database'   => 'stationwagon',
 			'username'   => 'root',
 			'password'   => '',
 			'persistent' => false,
