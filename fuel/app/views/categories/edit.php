@@ -5,7 +5,7 @@
 	<div class="option"><?php echo Html::anchor('categories', 'View Categories'); ?></div>
 	<div class="option"><?php echo Html::anchor('articles', 'View Articles'); ?></div>
 </div>
-	
+
 <?php echo $val->show_errors(); ?>
 <?php echo Form::open('categories/edit/'.$category->id); ?>
 
@@ -20,7 +20,7 @@
 </div>
 
 <div class="input submit">
-    <?php echo Form::submit(array('value' => 'Edit Category')); ?>
+	<?php echo Form::submit('edit_category', 'Edit Category'); ?>
 </div>
 
 <?php echo Form::close(); ?>
