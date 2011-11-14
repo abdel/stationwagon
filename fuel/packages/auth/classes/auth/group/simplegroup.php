@@ -13,7 +13,8 @@
 namespace Auth;
 
 
-class Auth_Group_SimpleGroup extends \Auth_Group_Driver {
+class Auth_Group_SimpleGroup extends \Auth_Group_Driver
+{
 
 	public static $_valid_groups = array();
 

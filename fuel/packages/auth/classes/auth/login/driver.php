@@ -12,7 +12,8 @@
 
 namespace Auth;
 
-abstract class Auth_Login_Driver extends \Auth_Driver {
+abstract class Auth_Login_Driver extends \Auth_Driver
+{
 
 	/**
 	 * @var  Auth_Driver
@@ -24,7 +25,18 @@ abstract class Auth_Login_Driver extends \Auth_Driver {
 	 */
 	protected static $_instances = array();
 
-	public static function factory(Array $config = array())
+	/**
+	 * This method is deprecated...use forge() instead.
+	 * 
+	 * @deprecated until 1.2
+	 */
+	public static function factory(array $config = array())
+	{
+		\Log::warning('This method is deprecated.  Please use a forge() instead.', __METHOD__);
+		return static::forge($config);
+	}
+
+	public static function forge(array $config = array())
 	{
 		// default driver id to driver name when not given
 		! array_key_exists('id', $config) && $config['id'] = $config['driver'];
@@ -42,7 +54,7 @@ abstract class Auth_Login_Driver extends \Auth_Driver {
 					? array('driver' => $custom)
 					: array_merge($custom, array('driver' => $d));
 				$class = 'Auth_'.ucfirst($type).'_Driver';
-				$class::factory($custom);
+				$class::forge($custom);
 			}
 		}
 
@@ -82,7 +94,7 @@ abstract class Auth_Login_Driver extends \Auth_Driver {
 	/**
 	 * Return user info in an array, always includes email & screen_name
 	 * Additional fields can be requested in the first param or set in config,
-	 * all additional fields must have their own method "get_user_" + fieldname
+	 * all additional fields must have their own method "get_" + fieldname
 	 *
 	 * @param   array  additional fields
 	 * @return  array

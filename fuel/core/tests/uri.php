@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -18,7 +18,8 @@ namespace Fuel\Core;
  * @group Core
  * @group Uri
  */
-class Tests_Uri extends TestCase {
+class Tests_Uri extends TestCase
+{
 
 	/**
 	 * Tests Uri::create()
@@ -27,6 +28,8 @@ class Tests_Uri extends TestCase {
 	 */
 	public function test_create()
 	{
+		Config::set('url_suffix', '');
+
 		$prefix = Uri::create('');
 
 		$output = Uri::create('controller/method');
@@ -46,7 +49,7 @@ class Tests_Uri extends TestCase {
 		$output = Uri::create('controller/:some', array('some' => 'thing', 'and' => 'more'), array('what' => ':and'));
 		$expected = $prefix."controller/thing.html?what=more";
 		$this->assertEquals($expected, $output);
-		
+
 		$output = Uri::create('http://example.com/controller/:some', array('some' => 'thing', 'and' => 'more'), array('what' => ':and'));
 		$expected = "http://example.com/controller/thing.html?what=more";
 		$this->assertEquals($expected, $output);

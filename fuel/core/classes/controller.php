@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -12,7 +12,8 @@
 
 namespace Fuel\Core;
 
-abstract class Controller {
+abstract class Controller
+{
 
 	/**
 	 * @var  Request  The current Request object
@@ -39,28 +40,27 @@ abstract class Controller {
 	/**
 	 * This method gets called before the action is called
 	 */
-	public function before() { }
+	public function before() {}
 
 	/**
 	 * This method gets called after the action is called
 	 */
-	public function after() { }
+	public function after($response)
+	{
+		return $response;
+	}
 
 	/**
 	 * This method returns the named parameter requested, or all of them
 	 * if no parameter is given.
 	 *
-	 * @param   string  The name of the parameter
-	 * @return  string
+	 * @param   string  $param    The name of the parameter
+	 * @param   mixed   $default  Default value
+	 * @return  mixed
 	 */
-	public function param($param)
+	public function param($param, $default = null)
 	{
-		if ( ! isset($this->request->named_params[$param]))
-		{
-			return FALSE;
-		}
-
-		return $this->request->named_params[$param];
+		return $this->request->param($param, $default);
 	}
 
 	/**
@@ -70,7 +70,7 @@ abstract class Controller {
 	 */
 	public function params()
 	{
-		return $this->request->named_params;
+		return $this->request->params();
 	}
 
 	/**
@@ -82,7 +82,7 @@ abstract class Controller {
 	 */
 	public function render($view, $data = array(), $auto_encode = null)
 	{
-		$this->response->body .= \View::factory($view, $data, $auto_encode);
+		$this->response->body .= \View::forge($view, $data, $auto_encode);
 	}
 }
 

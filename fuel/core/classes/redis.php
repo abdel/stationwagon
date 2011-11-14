@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -23,13 +23,14 @@
 namespace Fuel\Core;
 
 
-class RedisException extends Fuel_Exception {}
+class RedisException extends \FuelException {}
 
 
 /**
  * Redisent, a Redis interface for the modest among us
  */
-class Redis {
+class Redis
+{
 
 	protected static $instances = array();
 

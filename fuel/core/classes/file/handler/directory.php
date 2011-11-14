@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -14,7 +14,8 @@ namespace Fuel\Core;
 
 
 
-class File_Handler_Directory {
+class File_Handler_Directory
+{
 
 	/**
 	 * @var	string	path to the file
@@ -31,7 +32,7 @@ class File_Handler_Directory {
 	 */
 	protected $content = array();
 
-	protected function __construct($path, Array &$config, File_Area $area, $content = array())
+	protected function __construct($path, array &$config, File_Area $area, $content = array())
 	{
 		$this->path	= rtrim($path, '\\/').DS;
 		$this->area	= $area;
@@ -49,7 +50,18 @@ class File_Handler_Directory {
 		}
 	}
 
-	public static function factory($path, Array $config = array(), File_Area $area = null, $content = array())
+	/**
+	 * This method is deprecated...use forge() instead.
+	 * 
+	 * @deprecated until 1.2
+	 */
+	public static function factory($path, array $config = array(), File_Area $area = null, $content = array())
+	{
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a forge() instead.', __METHOD__);
+		return static::forge($path, $config, $area, $content);
+	}
+
+	public static function forge($path, array $config = array(), File_Area $area = null, $content = array())
 	{
 		return new static($path, $config, $area, $content);
 	}

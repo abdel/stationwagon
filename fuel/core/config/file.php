@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -31,7 +31,7 @@ return array(
 		'basedir'  => null,
 
 		/**
-		 * Array of allowed extensions, null for all
+		 * array of allowed extensions, null for all
 		 */
 		'extensions'  => null,
 
@@ -64,6 +64,20 @@ return array(
 
 	// fileinfo() magic filename
 	'magic_file' => null,
+
+	// default file and directory permissions
+	'chmod' => array(
+
+		/**
+		 * Permissions for newly created files
+		 */
+		'files'  => '0666',
+
+		/**
+		 * Permissions for newly created directories
+		 */
+		'folders'  => '0777',
+	),
 
 );
 

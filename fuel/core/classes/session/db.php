@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -16,7 +16,8 @@ namespace Fuel\Core;
 
 // --------------------------------------------------------------------
 
-class Session_Db extends \Session_Driver {
+class Session_Db extends \Session_Driver
+{
 
 	/*
 	 * @var	session database result object
@@ -48,7 +49,7 @@ class Session_Db extends \Session_Driver {
 	 * create a new session
 	 *
 	 * @access	public
-	 * @return	void
+	 * @return	Fuel\Core\Session_Db
 	 */
 	public function create()
 	{
@@ -66,6 +67,8 @@ class Session_Db extends \Session_Driver {
 
 		// and set the session cookie
 		$this->_set_cookie();
+
+		return $this;
 	}
 
 	// --------------------------------------------------------------------
@@ -75,7 +78,7 @@ class Session_Db extends \Session_Driver {
 	 *
 	 * @access	public
 	 * @param	boolean, set to true if we want to force a new session to be created
-	 * @return	void
+	 * @return	Fuel\Core\Session_Driver
 	 */
 	public function read($force = false)
 	{
@@ -117,7 +120,7 @@ class Session_Db extends \Session_Driver {
 		if (isset($payload[0])) $this->data = $payload[0];
 		if (isset($payload[1])) $this->flash = $payload[1];
 
-		parent::read();
+		return parent::read();
 	}
 
 	// --------------------------------------------------------------------
@@ -126,7 +129,7 @@ class Session_Db extends \Session_Driver {
 	 * write the current session
 	 *
 	 * @access	public
-	 * @return	void
+	 * @return	Fuel\Core\Session_Db
 	 */
 	public function write()
 	{
@@ -163,6 +166,8 @@ class Session_Db extends \Session_Driver {
 				$result = \DB::delete($this->config['table'])->where('updated', '<', $expired)->execute($this->config['database']);
 			}
 		}
+
+		return $this;
 	}
 
 	// --------------------------------------------------------------------
@@ -171,7 +176,7 @@ class Session_Db extends \Session_Driver {
 	 * destroy the current session
 	 *
 	 * @access	public
-	 * @return	void
+	 * @return	Fuel\Core\Session_Db
 	 */
 	public function destroy()
 	{
@@ -185,6 +190,8 @@ class Session_Db extends \Session_Driver {
 		// reset the stored session data
 		$this->record = null;
 		$this->keys = $this->flash = $this->data = array();
+
+		return $this;
 	}
 
 	// --------------------------------------------------------------------
@@ -208,7 +215,7 @@ class Session_Db extends \Session_Driver {
 				switch ($name)
 				{
 					case 'cookie_name':
-						if ( empty($item) OR ! is_string($item))
+						if ( empty($item) or ! is_string($item))
 						{
 							$item = 'fueldid';
 						}
@@ -216,28 +223,28 @@ class Session_Db extends \Session_Driver {
 
 					case 'database':
 						// do we have a database?
-						if ( empty($item) OR ! is_string($item))
+						if ( empty($item) or ! is_string($item))
 						{
 							\Config::load('db', true);
 							$item = \Config::get('db.active', false);
 						}
 						if ($item === false)
 						{
-							throw new \Fuel_Exception('You have specify a database to use database backed sessions.');
+							throw new \FuelException('You have specify a database to use database backed sessions.');
 						}
 					break;
 
 					case 'table':
 						// and a table name?
-						if ( empty($item) OR ! is_string($item))
+						if ( empty($item) or ! is_string($item))
 						{
-							throw new \Fuel_Exception('You have specify a database table name to use database backed sessions.');
+							throw new \FuelException('You have specify a database table name to use database backed sessions.');
 						}
 					break;
 
 					case 'gc_probability':
 						// do we have a path?
-						if ( ! is_numeric($item) OR $item < 0 OR $item > 100)
+						if ( ! is_numeric($item) or $item < 0 or $item > 100)
 						{
 							// default value: 5%
 							$item = 5;

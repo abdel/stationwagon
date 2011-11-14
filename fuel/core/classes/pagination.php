@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package		Fuel
  * @version		1.0
@@ -13,7 +13,8 @@ namespace Fuel\Core;
 
 
 
-class Pagination {
+class Pagination
+{
 
 	/**
 	 * @var	integer	The current page
@@ -34,7 +35,7 @@ class Pagination {
 	 * @var	integer	The number of total pages
 	 */
 	public static $total_pages = 0;
-	
+
 	/**
 	 * @var array The HTML for the display
 	 */
@@ -161,9 +162,9 @@ class Pagination {
 		\Lang::load('pagination', true);
 
 		$pagination  = static::$template['wrapper_start'];
-		$pagination .= static::prev_link(\Lang::line('pagination.previous'));
+		$pagination .= static::prev_link(\Lang::get('pagination.previous'));
 		$pagination .= static::page_links();
-		$pagination .= static::next_link(\Lang::line('pagination.next'));
+		$pagination .= static::next_link(\Lang::get('pagination.next'));
 		$pagination .= static::$template['wrapper_end'];
 
 		return $pagination;

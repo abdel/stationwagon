@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -16,7 +16,8 @@ namespace Fuel\Core;
 
 // --------------------------------------------------------------------
 
-class Session_File extends \Session_Driver {
+class Session_File extends \Session_Driver
+{
 
 	/**
 	 * array of driver config defaults
@@ -43,7 +44,7 @@ class Session_File extends \Session_Driver {
 	 * create a new session
 	 *
 	 * @access	public
-	 * @return	void
+	 * @return	Fuel\Core\Session_File
 	 */
 	public function create()
 	{
@@ -60,6 +61,8 @@ class Session_File extends \Session_Driver {
 
 		// and set the session cookie
 		$this->_set_cookie();
+
+		return $this;
 	}
 
 	// --------------------------------------------------------------------
@@ -69,7 +72,7 @@ class Session_File extends \Session_Driver {
 	 *
 	 * @access	public
 	 * @param	boolean, set to true if we want to force a new session to be created
-	 * @return	void
+	 * @return	Fuel\Core\Session_Driver
 	 */
 	public function read($force = false)
 	{
@@ -134,7 +137,7 @@ class Session_File extends \Session_Driver {
 	 * write the session
 	 *
 	 * @access	public
-	 * @return	void
+	 * @return	Fuel\Core\Session_File
 	 */
 	public function write()
 	{
@@ -153,7 +156,7 @@ class Session_File extends \Session_Driver {
 			$this->_write_file($this->keys['session_id'], $payload);
 
 			// was the session id rotated?
-			if ( isset($this->keys['previous_id']) && $this->keys['previous_id'] != $this->keys['session_id'])
+			if ( isset($this->keys['previous_id']) and $this->keys['previous_id'] != $this->keys['session_id'])
 			{
 				// point the old session file to the new one, we don't want to lose the session
 				$payload = $this->_serialize(array('rotated_session_id' => $this->keys['session_id']));
@@ -171,8 +174,8 @@ class Session_File extends \Session_Driver {
 
 					while (($file = readdir($handle)) !== false)
 					{
-						if (filetype($this->config['path'] . $file) == 'file' &&
-							strpos($file, $this->config['cookie_name'].'_') === 0 &&
+						if (filetype($this->config['path'] . $file) == 'file' and
+							strpos($file, $this->config['cookie_name'].'_') === 0 and
 							filemtime($this->config['path'] . $file) < $expire)
 						{
 							@unlink($this->config['path'] . $file);
@@ -182,6 +185,8 @@ class Session_File extends \Session_Driver {
 				}
 			}
 		}
+
+		return $this;
 	}
 
 	// --------------------------------------------------------------------
@@ -190,7 +195,7 @@ class Session_File extends \Session_Driver {
 	 * destroy the current session
 	 *
 	 * @access	public
-	 * @return	void
+	 * @return	Fuel\Core\Session_File
 	 */
 	public function destroy()
 	{
@@ -207,6 +212,8 @@ class Session_File extends \Session_Driver {
 
 		// reset the stored session data
 		$this->keys = $this->flash = $this->data = array();
+
+		return $this;
 	}
 
 	// --------------------------------------------------------------------
@@ -310,12 +317,12 @@ class Session_File extends \Session_Driver {
 						// do we have a path?
 						if ( empty($item) OR ! is_dir($item))
 						{
-							throw new \Fuel_Exception('You have specify a valid path to store the session data files.');
+							throw new \FuelException('You have specify a valid path to store the session data files.');
 						}
 						// and can we write to it?
 						if ( ! is_writable($item))
 						{
-							throw new \Fuel_Exception('The webserver doesn\'t have write access to the path to store the session data files.');
+							throw new \FuelException('The webserver doesn\'t have write access to the path to store the session data files.');
 						}
 						// update the path, and add the trailing slash
 						$item = realpath($item).'/';

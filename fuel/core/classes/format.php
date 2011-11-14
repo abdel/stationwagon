@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -23,7 +23,8 @@ namespace Fuel\Core;
  * @copyright  2010 - 2011 Fuel Development Team
  * @link       http://fuelphp.com/docs/classes/format.html
  */
-class Format {
+class Format
+{
 
 	/**
 	 * @var  array|mixed  input to convert
@@ -31,21 +32,32 @@ class Format {
 	protected $_data = array();
 
 	/**
+	 * This method is deprecated...use forge() instead.
+	 *
+	 * @deprecated until 1.2
+	 */
+	public static function factory($data = null, $from_type = null)
+	{
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a forge() instead.', __METHOD__);
+		return static::forge($data, $from_type);
+	}
+
+	/**
 	 * Returns an instance of the Format object.
 	 *
-	 *     echo Format::factory(array('foo' => 'bar'))->to_xml();
+	 *     echo Format::forge(array('foo' => 'bar'))->to_xml();
 	 *
 	 * @param   mixed  general date to be converted
 	 * @param   string  data format the file was provided in
-	 * @return  Factory
+	 * @return  Format
 	 */
-	public static function factory($data = null, $from_type = null)
+	public static function forge($data = null, $from_type = null)
 	{
 		return new static($data, $from_type);
 	}
 
 	/**
-	 * Do not use this directly, call factory()
+	 * Do not use this directly, call forge()
 	 */
 	public function __construct($data = null, $from_type = null)
 	{
@@ -59,7 +71,7 @@ class Format {
 
 			else
 			{
-				throw new Fuel_Exception('Format class does not support conversion from "' . $from_type . '".');
+				throw new FuelException('Format class does not support conversion from "' . $from_type . '".');
 			}
 		}
 
@@ -84,6 +96,11 @@ class Format {
 		}
 
 		$array = array();
+
+		if (is_object($data) and ! $data instanceof \Iterator)
+		{
+			$data = get_object_vars($data);
+		}
 
 		foreach ($data as $key => $value)
 		{
@@ -224,6 +241,20 @@ class Format {
 	}
 
 	/**
+	 * To JSONP conversion
+	 *
+	 * @param mixed $data
+	 * @return string
+	 */
+	public function to_jsonp($data = null)
+	{
+		 $callback = \Input::get_post('callback', null);
+		 is_null($callback) and $callback = 'response';
+
+		 return $callback.'('.$this->to_json($data).')';
+	}
+
+	/**
 	 * Serialize
 	 *
 	 * @param   mixed  $data
@@ -252,7 +283,7 @@ class Format {
 			$data = $this->_data;
 		}
 
-		return var_export($data, TRUE);
+		return var_export($data, true);
 	}
 
 	/**
@@ -284,7 +315,16 @@ class Format {
 	 */
 	protected function _from_xml($string)
 	{
-		return $string ? (array) simplexml_load_string($string, 'SimpleXMLElement', LIBXML_NOCDATA) : array();
+		$_arr = is_string($string) ? simplexml_load_string($string, 'SimpleXMLElement', LIBXML_NOCDATA) : $string;
+		$arr = array();
+
+		// Convert all objects SimpleXMLElement to array recursively
+		foreach ((array)$_arr as $key => $val)
+		{
+			$arr[$key] = (is_array($val) or is_object($val)) ? $this->_from_xml($val) : $val;
+		}
+
+		return $arr;
 	}
 
 	/**

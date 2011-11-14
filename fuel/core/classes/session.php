@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -20,7 +20,8 @@ namespace Fuel\Core;
  * @author		Harro "WanWizard" Verton
  * @link		http://fuelphp.com/docs/classes/session.html
  */
-class Session {
+class Session
+{
 	/**
 	 * loaded session driver instance
 	 */
@@ -40,6 +41,7 @@ class Session {
 		'match_ua'			=> true,
 		'cookie_domain' 	=> '',
 		'cookie_path'		=> '/',
+		'cookie_http_only'	=> null,
 		'expire_on_close'	=> false,
 		'expiration_time'	=> 7200,
 		'rotation_time'		=> 300,
@@ -66,13 +68,24 @@ class Session {
 	// --------------------------------------------------------------------
 
 	/**
+	 * This method is deprecated...use forge() instead.
+	 *
+	 * @deprecated until 1.2
+	 */
+	public static function factory($custom = array())
+	{
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a forge() instead.', __METHOD__);
+		return static::forge($custom);
+	}
+
+	/**
 	 * Factory
 	 *
 	 * Produces fully configured session driver instances
 	 *
 	 * @param	array|string	full driver config or just driver type
 	 */
-	public static function factory($custom = array())
+	public static function forge($custom = array())
 	{
 		$config = \Config::get('session', array());
 
@@ -104,7 +117,7 @@ class Session {
 			$class_instance = 'Fuel\\Core\\'.$class;
 			if (static::$_instances[$cookie] instanceof $class_instance)
 			{
-				throw new \Fuel_Exception('You can not instantiate two different sessions using the same cookie name "'.$cookie.'"');
+				throw new \FuelException('You can not instantiate two different sessions using the same cookie name "'.$cookie.'"');
 			}
 		}
 		else
@@ -157,7 +170,7 @@ class Session {
 
 		if (static::$_instance === null)
 		{
-			static::$_instance = static::factory();
+			static::$_instance = static::forge();
 		}
 
 		return static::$_instance;
@@ -168,8 +181,8 @@ class Session {
 	/**
 	 * set session variables
 	 *
-	 * @param	string	name of the variable to set
-	 * @param	mixed	value
+	 * @param	string|array	name of the variable to set or array of values, array(name => value)
+	 * @param	mixed			value
 	 * @access	public
 	 * @return	void
 	 */
@@ -321,7 +334,20 @@ class Session {
 	}
 
 	// --------------------------------------------------------------------
+	
+	/**
+	 * rotate the session id
+	 *
+	 * @access	public
+	 * @return	void
+	 */
+	public static function rotate()
+	{
+		return static::instance()->rotate();
+	}
 
+	// --------------------------------------------------------------------
+	
 	/**
 	 * destroy the current session
 	 *

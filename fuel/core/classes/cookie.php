@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -23,7 +23,8 @@ namespace Fuel\Core;
  * @license    http://kohanaframework.org/license
  * @link       http://fuelphp.com/docs/classes/cookie.html
  */
-class Cookie {
+class Cookie
+{
 
 	/**
 	 * @var  array  Cookie class configuration defaults
@@ -41,7 +42,6 @@ class Cookie {
 	 */
 	public static function _init()
 	{
-		\Config::load('cookie', true);
 		static::$config = array_merge(static::$config, \Config::get('cookie', array()));
 	}
 
@@ -80,6 +80,8 @@ class Cookie {
 	 */
 	public static function set($name, $value, $expiration = null, $path = null, $domain = null, $secure = null, $http_only = null)
 	{
+		$value = \Fuel::value($value);
+
 		// use the class defaults for the other parameters if not provided
 		is_null($expiration) and $expiration = static::$config['expiration'];
 		is_null($path) and $path = static::$config['path'];
@@ -99,16 +101,20 @@ class Cookie {
 	 *     Cookie::delete('theme');
 	 *
 	 * @param   string   cookie name
+ 	 * @param   string    path of the cookie
+	 * @param   string    domain of the cookie
+	 * @param   boolean   if true, the cookie should only be transmitted over a secure HTTPS connection
+	 * @param   boolean   if true, the cookie will be made accessible only through the HTTP protocol
 	 * @return  boolean
 	 * @uses    static::set
 	 */
-	public static function delete($name)
+	public static function delete($name, $path = null, $domain = null, $secure = null, $http_only = null)
 	{
 		// Remove the cookie
 		unset($_COOKIE[$name]);
 
 		// Nullify the cookie and make it expire
-		return static::set($name, null, -86400);
+		return static::set($name, null, -86400, $path, $domain, $secure, $http_only);
 	}
 }
 

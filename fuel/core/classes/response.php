@@ -1,23 +1,23 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
- * @package		Fuel
- * @version		1.0
- * @author		Fuel Development Team
- * @license		MIT License
- * @copyright	2010 - 2011 Fuel Development Team
- * @link		http://fuelphp.com
+ * @package    Fuel
+ * @version    1.0
+ * @author     Fuel Development Team
+ * @license    MIT License
+ * @copyright  2010 - 2011 Fuel Development Team
+ * @link       http://fuelphp.com
  */
 
 namespace Fuel\Core;
 
 
-
-class Response {
+class Response
+{
 
 	/**
-	 * @var	array	An array of status codes and messages
+	 * @var  array  An array of status codes and messages
 	 */
 	public static $statuses = array(
 		100 => 'Continue',
@@ -68,6 +68,10 @@ class Response {
 		509 => 'Bandwidth Limit Exceeded'
 	);
 
+	public static function forge($body = null, $status = 200)
+	{
+		return new static($body, $status);
+	}
 
 	/**
 	 * Redirects to another uri/url.  Sets the redirect header,
@@ -76,21 +80,20 @@ class Response {
 	 *
 	 * The refresh header works better on certain servers like IIS.
 	 *
-	 * @access	public
-	 * @param	string	The url
-	 * @param	string	The redirect method
-	 * @param	int		The redirect status code
-	 * @return	void
+	 * @param   string  $url     The url
+	 * @param   string  $method  The redirect method
+	 * @param   int     $code    The redirect status code
+	 * @return  void
 	 */
-	public static function redirect($url = '', $method = 'location', $redirect_code = 302)
+	public static function redirect($url = '', $method = 'location', $code = 302)
 	{
 		$response = new static;
 
-		$response->status = $redirect_code;
+		$response->set_status($code);
 
 		if (strpos($url, '://') === false)
 		{
-			$url = Uri::create($url);
+			$url = $url !== '' ? \Uri::create($url) : \Uri::base();
 		}
 
 		if ($method == 'location')
@@ -113,20 +116,26 @@ class Response {
 	}
 
 	/**
-	 * @var	int		The HTTP status code
+	 * @var  int  The HTTP status code
 	 */
 	public $status = 200;
 
 	/**
-	 * @var	array	An array of headers
+	 * @var  array  An array of headers
 	 */
 	public $headers = array();
 
 	/**
-	 * @var	string	the content of the response
+	 * @var  string  The content of the response
 	 */
 	public $body = null;
 
+	/**
+	 * Sets up the response with a body and a status code.
+	 *
+	 * @param  string  $body    The response body
+	 * @param  string  $status  The response status
+	 */
 	public function __construct($body = null, $status = 200)
 	{
 		$this->body = $body;
@@ -134,24 +143,44 @@ class Response {
 	}
 
 	/**
-	 * Adds a header to the queue
+	 * Sets the response status code
 	 *
-	 * @access	public
-	 * @param	string	The header name
-	 * @param	string	The header value
-	 * @return	void
+	 * @param   string  $status  The status code
+	 * @return  $this
 	 */
-	public function set_header($name, $value)
+	public function set_status($status = 200)
 	{
-		$this->headers[$name] = $value;
+		$this->status = $status;
+		return $this;
 	}
 
 	/**
-	 * Sets the body for the response
+	 * Adds a header to the queue
 	 *
-	 * @access	public
-	 * @param	string	The response content
-	 * @return	void
+	 * @param   string  The header name
+	 * @param   string  The header value
+	 * @param   string  Whether to replace existing value for the header, will never overwrite/be overwritten when false
+	 * @return  $this
+	 */
+	public function set_header($name, $value, $replace = true)
+	{
+		if ($replace)
+		{
+			$this->headers[$name] = $value;
+		}
+		else
+		{
+			$this->headers[] = array($name, $value);
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Sets (or returns) the body for the response
+	 *
+	 * @param   string  The response content
+	 * @return  $this|string
 	 */
 	public function body($value = false)
 	{
@@ -160,43 +189,70 @@ class Response {
 			return $this->body;
 		}
 		$this->body = $value;
+		return $this;
 	}
 
 	/**
-	 * Sends the headers if they haven't already been sent.
+	 * Sends the headers if they haven't already been sent.  Returns whether
+	 * they were sent or not.
 	 *
-	 * @access	public
-	 * @return	void
+	 * @return  bool
 	 */
 	public function send_headers()
 	{
 		if ( ! headers_sent())
 		{
-			// Send the protocol line first
-			$protocol = \Input::server('SERVER_PROTOCOL') ? \Input::server('SERVER_PROTOCOL') : 'HTTP/1.1';
-			header($protocol.' '.$this->status.' '.static::$statuses[$this->status]);
+			// Send the protocol/status line first, FCGI servers need different status header
+			if ( ! empty($_SERVER['FCGI_SERVER_VERSION']))
+			{
+				header('Status: '.$this->status.' '.static::$statuses[$this->status]);
+			}
+			else
+			{
+				$protocol = \Input::server('SERVER_PROTOCOL') ? \Input::server('SERVER_PROTOCOL') : 'HTTP/1.1';
+				header($protocol.' '.$this->status.' '.static::$statuses[$this->status]);
+			}
 
 			foreach ($this->headers as $name => $value)
 			{
+				// Parse non-replace headers
+				is_int($name) and is_array($value) and list($name, $value) = $value;
+
+				// Create the header
 				is_string($name) and $value = "{$name}: {$value}";
+
+				// Send it
 				header($value, true);
 			}
+			return true;
 		}
+		return false;
 	}
 
+	/**
+	 * Sends the response to the output buffer.  Optionally will send the
+	 * headers.
+	 *
+	 * @param   string  $send_headers  Whether to send the headers
+	 * @return  $this
+	 */
 	public function send($send_headers = false)
 	{
 		$send_headers and $this->send_headers();
-		
+
 		if ($this->body != null)
 		{
 			echo $this->body;
 		}
 	}
-	
+
+	/**
+	 * Returns the body as a string.
+	 *
+	 * @return  string
+	 */
 	public function __toString()
 	{
 		return (string) $this->body();
 	}
 }
-

@@ -11,7 +11,8 @@
 
 namespace Fuel\Core;
 
-class Database_Query_Builder_Select extends \Database_Query_Builder_Where {
+class Database_Query_Builder_Select extends \Database_Query_Builder_Where
+{
 
 	// SELECT ...
 	protected $_select = array();
@@ -285,11 +286,17 @@ class Database_Query_Builder_Select extends \Database_Query_Builder_Where {
 	/**
 	 * Compile the SQL query and return it.
 	 *
-	 * @param   object  Database instance
+	 * @param   mixed  Database instance or instance name
 	 * @return  string
 	 */
-	public function compile(\Database_Connection$db)
+	public function compile($db = null)
 	{
+		if ( ! $db instanceof \Database_Connection)
+		{
+			// Get the database instance
+			$db = \Database_Connection::instance($db);
+		}
+		
 		// Callback to quote identifiers
 		$quote_ident = array($db, 'quote_identifier');
 

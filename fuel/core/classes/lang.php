@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -20,29 +20,43 @@ namespace Fuel\Core;
  * @author		Phil Sturgeon
  * @link		http://fuelphp.com/docs/classes/lang.html
  */
-class Lang {
+class Lang
+{
 
+	/**
+	 * @var  array  language lines
+	 */
 	public static $lines = array();
 
-	public static $flat_lines = array();
+	/**
+	 * @var  array  language(s) to fall back on when loading a file from the current lang fails
+	 */
+	public static $fallback;
 
-	public static $fallback = 'en';
-
-	public static function load($file, $group = null)
+	public static function _init()
 	{
-		$lang = array();
+		static::$fallback = (array) \Config::get('language_fallback', 'en');
+	}
 
-		// Use the current language, failing that use the fallback language
-		$langconf = (is_array(\Config::get('language'))) ? \Config::get('language') : array(\Config::get('language'));
+	/**
+	 * Load a language file
+	 *
+	 * @param   string
+	 * @param   string|null  name of the group to load to, null for global
+	 */
+	public static function load($file, $group = null, $language = null)
+	{
+		$languages = static::$fallback;
+		array_unshift($languages, $language ?: \Config::get('language'));
 
-		foreach (array_merge($langconf, (array)static::$fallback) as $language)
+		$lines = array();
+		foreach ($languages as $lang)
 		{
-			if ($path = \Fuel::find_file('lang/'.$language, $file, '.php', true))
+			if ($path = \Finder::search('lang/'.$lang, $file, '.php', true))
 			{
-				$lang = array();
 				foreach ($path as $p)
 				{
-					$lang = $lang + \Fuel::load($p);
+					$lines = \Arr::merge(\Fuel::load($p), $lines);
 				}
 				break;
 			}
@@ -50,7 +64,7 @@ class Lang {
 
 		if ($group === null)
 		{
-			static::$lines = static::$lines + $lang;
+			static::$lines = \Arr::merge($lines, static::$lines);
 		}
 		else
 		{
@@ -59,74 +73,51 @@ class Lang {
 			{
 				static::$lines[$group] = array();
 			}
-			static::$lines[$group] = static::$lines[$group] + $lang;
+			static::$lines[$group] = \Arr::merge($lines, static::$lines[$group]);
 		}
 	}
 
-	public static function line($line, $params = array())
+	/**
+	 * Get a line from the language
+	 *
+	 * @param   string  key for the line
+	 * @param   array   array of params to str_replace
+	 * @param   mixed   default value to return
+	 * @return  bool|string  either the line or false when not found
+	 */
+	public static function get($line, array $params = array(), $default = null)
 	{
-		if (strpos($line, '.') !== false)
-		{
-			$parts = explode('.', $line);
-
-			$return = false;
-			foreach ($parts as $part)
-			{
-				if ($return === false and isset(static::$lines[$part]))
-				{
-					$return = static::$lines[$part];
-				}
-				elseif (isset($return[$part]))
-				{
-					$return = $return[$part];
-				}
-				else
-				{
-					return false;
-				}
-			}
-			return  static::_parse_params($return, $params);
-		}
-
-		isset(static::$lines[$line]) and $line = static::$lines[$line];
-
-		return static::_parse_params($line, $params);
+		return \Str::tr(\Arr::get(static::$lines, $line, $default), $params);
 	}
 
+	/**
+	 * Fetch a line from the language
+	 *
+	 * @param   string  key for the line
+	 * @param   array   array of params to str_replace
+	 * @return  bool|string  either the line or false when not found
+	 * @depricated  Remove in v1.2
+	 */
+	public static function line($line, array $params = array())
+	{
+		logger(\Fuel::L_WARNING, 'This method is deprecated. Please use Lang::get() instead.', __METHOD__);
+		return \Str::tr(\Arr::get(static::$lines, $line, false), $params);
+	}
+
+	/**
+	 * Set or replace a line in the language
+	 *
+	 * @param   string  key to the line
+	 * @param   string  value for the key
+	 * @param   string  group
+	 * @return  void
+	 */
 	public static function set($line, $value, $group = null)
 	{
-		if ($group === null)
-		{
-			static::$lines[$line] = $value;
-			return true;
-		}
-		elseif (isset(static::$lines[$group][$line]))
-		{
-			static::$lines[$group][$line] = $value;
-			return true;
-		}
-		return false;
+		$key = ($group ? $group.'.' : '').$line;
+		\Arr::set(static::$lines, $key, $value);
 	}
 
-	protected static function _parse_params($string, $array = array())
-	{
-		if (is_string($string))
-		{
-			$tr_arr = array();
-
-			foreach ($array as $from => $to)
-			{
-				$tr_arr[':'.$from] = $to;
-			}
-			unset($array);
-
-			return strtr($string, $tr_arr);
-		}
-		else
-		{
-			return $string;
-		}
-	}
 }
 
 

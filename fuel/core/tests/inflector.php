@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -18,7 +18,8 @@ namespace Fuel\Core;
  * @group Core
  * @group Inflector
  */
-class Tests_Inflector extends TestCase {
+class Tests_Inflector extends TestCase
+{
 
 	public function ordinalize_provider()
 	{

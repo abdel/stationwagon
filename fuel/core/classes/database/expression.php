@@ -19,7 +19,8 @@ namespace Fuel\Core;
 
 
 
-class Database_Expression {
+class Database_Expression
+{
 
 	// Raw expression string
 	protected $_value;
@@ -62,4 +63,4 @@ class Database_Expression {
 		return $this->value();
 	}
 
-} // End Database_Expression
+}

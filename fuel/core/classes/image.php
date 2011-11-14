@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * Image manipulation class.
  *
@@ -14,7 +14,8 @@
 
 namespace Fuel\Core;
 
-class Image {
+class Image
+{
 
 	protected static $_instance = null;
 
@@ -34,18 +35,29 @@ class Image {
 	{
 		if (static::$_instance == null)
 		{
-			static::$_instance = static::factory(static::$_config);
+			static::$_instance = static::forge(static::$_config);
 		}
 		return static::$_instance;
 	}
 
 	/**
-	 * Creates a new instance of the image driver
+	 * This method is deprecated...use forge() instead.
 	 *
-	 * @param  array   $config
-	 * @return Image_Driver
+	 * @deprecated until 1.2
 	 */
 	public static function factory($config = array(), $filename = null)
+	{
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a forge() instead.', __METHOD__);
+		return static::forge($config, $filename);
+	}
+
+	/**
+	 * Creates a new instance of the image driver
+	 *
+	 * @param   array  $config
+	 * @return  Image_Driver
+	 */
+	public static function forge($config = array(), $filename = null)
 	{
 		!is_array($config) and $config = array();
 
@@ -56,7 +68,7 @@ class Image {
 		$class = 'Image_'.$protocol;
 		if ($protocol == 'Driver' || ! class_exists($class))
 		{
-			throw new \Fuel_Exception('Driver '.$protocol.' is not a valid driver for image manipulation.');
+			throw new \FuelException('Driver '.$protocol.' is not a valid driver for image manipulation.');
 		}
 		$return = new $class($config);
 		if ($filename !== null)
@@ -74,8 +86,8 @@ class Image {
 	 * make sure its the first one sent! If errors arise, create a new instance using
 	 * factory().
 	 *
-	 * @param  array   $config   An array of configuration settings.
-	 * @return Image_Driver
+	 * @param   array   $config   An array of configuration settings.
+	 * @return  Image_Driver
 	 */
 	public static function config($index = array(), $value = null)
 	{
@@ -95,8 +107,8 @@ class Image {
 	/**
 	 * Loads the image and checks if its compatable.
 	 *
-	 * @param  string  $filename  The file to load
-	 * @return Image_Driver
+	 * @param   string  $filename  The file to load
+	 * @return  Image_Driver
 	 */
 	public static function load($filename)
 	{
@@ -108,11 +120,11 @@ class Image {
 	 *
 	 * Absolute integer or percentages accepted for all 4.
 	 *
-	 * @param  integer  $x1  X-Coordinate based from the top-left corner.
-	 * @param  integer  $y1  Y-Coordinate based from the top-left corner.
-	 * @param  integer  $x2  X-Coordinate based from the bottom-right corner.
-	 * @param  integer  $y2  Y-Coordinate based from the bottom-right corner.
-	 * @return Image_Driver
+	 * @param   integer  $x1  X-Coordinate based from the top-left corner.
+	 * @param   integer  $y1  Y-Coordinate based from the top-left corner.
+	 * @param   integer  $x2  X-Coordinate based from the bottom-right corner.
+	 * @param   integer  $y2  Y-Coordinate based from the bottom-right corner.
+	 * @return  Image_Driver
 	 */
 	public static function crop($x1, $y1, $x2, $y2)
 	{
@@ -122,11 +134,11 @@ class Image {
 	/**
 	 * Resizes the image. If the width or height is null, it will resize retaining the original aspect ratio.
 	 *
-	 * @param  integer  $width   The new width of the image.
-	 * @param  integer  $height  The new height of the image.
-	 * @param  boolean  $keepar  Defaults to true. If false, allows resizing without keeping AR.
-	 * @param  boolean  $pad     If set to true and $keepar is true, it will pad the image with the configured bgcolor
-	 * @return Image_Driver
+	 * @param   integer  $width   The new width of the image.
+	 * @param   integer  $height  The new height of the image.
+	 * @param   boolean  $keepar  Defaults to true. If false, allows resizing without keeping AR.
+	 * @param   boolean  $pad     If set to true and $keepar is true, it will pad the image with the configured bgcolor
+	 * @return  Image_Driver
 	 */
 	public static function resize($width, $height, $keepar = true, $pad = false)
 	{
@@ -136,9 +148,9 @@ class Image {
 	/**
 	 * Resizes the image. If the width or height is null, it will resize retaining the original aspect ratio.
 	 *
-	 * @param  integer  $width   The new width of the image.
-	 * @param  integer  $height  The new height of the image.
-	 * @return Image_Driver
+	 * @param   integer  $width   The new width of the image.
+	 * @param   integer  $height  The new height of the image.
+	 * @return  Image_Driver
 	 */
 	public static function crop_resize($width, $height)
 	{
@@ -148,8 +160,8 @@ class Image {
 	/**
 	 * Rotates the image
 	 *
-	 * @param  integer  $degrees  The degrees to rotate, negatives integers allowed.
-	 * @return Image_Driver
+	 * @param   integer  $degrees  The degrees to rotate, negatives integers allowed.
+	 * @return  Image_Driver
 	 */
 	public static function rotate($degrees)
 	{
@@ -159,10 +171,10 @@ class Image {
 	/**
 	 * Adds a watermark to the image.
 	 *
-	 * @param  string   $filename  The filename of the watermark file to use.
-	 * @param  string   $position  The position of the watermark, ex: "bottom right", "center center", "top left"
-	 * @param  integer  $padding   The spacing between the edge of the image.
-	 * @return Image_Driver
+	 * @param   string   $filename  The filename of the watermark file to use.
+	 * @param   string   $position  The position of the watermark, ex: "bottom right", "center center", "top left"
+	 * @param   integer  $padding   The spacing between the edge of the image.
+	 * @return  Image_Driver
 	 */
 	public static function watermark($filename, $position, $padding = 5)
 	{
@@ -172,9 +184,9 @@ class Image {
 	/**
 	 * Adds a border to the image.
 	 *
-	 * @param  integer  $size   The side of the border, in pixels.
-	 * @param  string   $color  A hexidecimal color.
-	 * @param  Image_Driver
+	 * @param   integer  $size   The side of the border, in pixels.
+	 * @param   string   $color  A hexidecimal color.
+	 * @return  Image_Driver
 	 */
 	public static function border($size, $color = null)
 	{
@@ -184,8 +196,8 @@ class Image {
 	/**
 	 * Masks the image using the alpha channel of the image input.
 	 *
-	 * @param  string  $maskimage  The location of the image to use as the mask
-	 * @return Image_Driver
+	 * @param   string  $maskimage  The location of the image to use as the mask
+	 * @return  Image_Driver
 	 */
 	public static function mask($maskimage)
 	{
@@ -195,20 +207,20 @@ class Image {
 	/**
 	 * Adds rounded corners to the image.
 	 *
-	 * @param  integer  $radius
-	 * @param  integer  $sides      Accepts any combination of "tl tr bl br" seperated by spaces, or null for all sides
-	 * @param  integer  $antialias  Sets the antialias range.
-	 * @return Image_Driver
+	 * @param   integer  $radius
+	 * @param   integer  $sides      Accepts any combination of "tl tr bl br" seperated by spaces, or null for all sides
+	 * @param   integer  $antialias  Sets the antialias range.
+	 * @return  Image_Driver
 	 */
 	public static function rounded($radius, $sides = null, $antialias = null)
 	{
 		return static::instance()->rounded($radius, $sides, $antialias);
 	}
-	
+
 	/**
 	 * Turns the image into a grayscale version
-	 * 
-	 * @return	Image_Driver
+	 *
+	 * @return  Image_Driver
 	 */
 	public static function grayscale()
 	{
@@ -218,9 +230,9 @@ class Image {
 	/**
 	 * Saves the image, and optionally attempts to set permissions
 	 *
-	 * @param  string  $filename     The location where to save the image.
-	 * @param  string  $permissions  Allows unix style permissions
-	 * @return Image_Driver
+	 * @param   string  $filename     The location where to save the image.
+	 * @param   string  $permissions  Allows unix style permissions
+	 * @return  Image_Driver
 	 */
 	public static function save($filename, $permissions = null)
 	{
@@ -230,10 +242,10 @@ class Image {
 	/**
 	 * Saves the image, and optionally attempts to set permissions
 	 *
-	 * @param  string  $prepend      The text to add to the beginning of the filename.
-	 * @param  string  $append       The text to add to the end of the filename.
-	 * @param  string  $permissions  Allows unix style permissions
-	 * @return Image_Driver
+	 * @param   string  $prepend      The text to add to the beginning of the filename.
+	 * @param   string  $append       The text to add to the end of the filename.
+	 * @param   string  $permissions  Allows unix style permissions
+	 * @return  Image_Driver
 	 */
 	public static function save_pa($prepend, $append = null, $permissions = null)
 	{
@@ -243,8 +255,8 @@ class Image {
 	/**
 	 * Outputs the file directly to the user.
 	 *
-	 * @param  string  $filetype  The extension type to use. Ex: png, jpg, bmp, gif
-	 * @return Image_Driver
+	 * @param   string  $filetype  The extension type to use. Ex: png, jpg, bmp, gif
+	 * @return  Image_Driver
 	 */
 	public static function output($filetype = null)
 	{
@@ -252,10 +264,10 @@ class Image {
 	}
 
 	/**
-	 * Returns sizes for the currently loaded image, or the image given in the $filename.
+	 * Returns  sizes for the currently loaded image, or the image given in the $filename.
 	 *
-	 * @param	string	$filename	The location of the file to get sizes for.
-	 * @return	object	An object containing width and height variables.
+	 * @param   string  The location of the file to get sizes for.
+	 * @return  object  An object containing width and height variables.
 	 */
 	public static function sizes($filename = null)
 	{
@@ -266,6 +278,4 @@ class Image {
 	{
 		return static::instance()->reload();
 	}
-
 }
-

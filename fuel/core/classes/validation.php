@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -25,14 +25,31 @@ namespace Fuel\Core;
  * @subpackage  Core
  * @category    Core
  */
-class Validation {
+class Validation
+{
 
 	/**
 	 * @var  Validation  keeps a reference to an instance of Validation while it is being run
 	 */
 	protected static $active;
 
+	/**
+	 * @var  Fieldset_Field  keeps a reference to an instance of the Fieldset_Field validation is being run on
+	 */
+	protected static $active_field;
+
+	/**
+	 * This method is deprecated...use forge() instead.
+	 *
+	 * @deprecated until 1.2
+	 */
 	public static function factory($fieldset = 'default')
+	{
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a forge() instead.', __METHOD__);
+		return static::forge($fieldset);
+	}
+
+	public static function forge($fieldset = 'default')
 	{
 		if (is_string($fieldset))
 		{
@@ -58,6 +75,8 @@ class Validation {
 
 	/**
 	 * Fetch the currently active validation instance
+	 *
+	 * @return  Validation
 	 */
 	public static function active()
 	{
@@ -73,32 +92,48 @@ class Validation {
 	}
 
 	/**
-	 * @var  Fieldset
+	 * Fetch the field currently being validated
+	 */
+	public static function active_field()
+	{
+		return static::$active_field;
+	}
+
+	/**
+	 * Set or unset the current field being validated
+	 */
+	protected static function set_active_field($instance = null)
+	{
+		static::$active_field = $instance;
+	}
+
+	/**
+	 * @var  Fieldset  the fieldset this instance validates
 	 */
 	protected $fieldset;
 
 	/**
-	 * @var  Array  available after validation started running: contains given input values
+	 * @var  array  available after validation started running: contains given input values
 	 */
 	protected $input = array();
 
 	/**
-	 * @var  Array  contains values of fields that validated succesfully
+	 * @var  array  contains values of fields that validated successfully
 	 */
 	protected $validated = array();
 
 	/**
-	 * @var  Array  contains Validation_Error instances of encountered errors
+	 * @var  array  contains Validation_Error instances of encountered errors
 	 */
 	protected $errors = array();
 
 	/**
-	 * @var  Array  contains a list of classnames and objects that may contain validation methods
+	 * @var  array  contains a list of classnames and objects that may contain validation methods
 	 */
 	protected $callables = array();
 
 	/**
-	 * @var  Array  contains validation error messages, will overwrite those from lang files
+	 * @var  array  contains validation error messages, will overwrite those from lang files
 	 */
 	protected $error_messages = array();
 
@@ -111,7 +146,7 @@ class Validation {
 		}
 		else
 		{
-			$this->fieldset = \Fieldset::factory($fieldset, array('validation_instance' => $this));
+			$this->fieldset = \Fieldset::forge($fieldset, array('validation_instance' => $this));
 		}
 
 		$this->callables = array($this);
@@ -170,8 +205,9 @@ class Validation {
 	/**
 	 * This will overwrite lang file messages for this validation instance
 	 *
-	 * @param  string
-	 * @param  string
+	 * @param   string
+	 * @param   string
+	 * @return  Validation  this, to allow chaining
 	 */
 	public function set_message($rule, $message)
 	{
@@ -183,6 +219,8 @@ class Validation {
 		{
 			unset($this->error_messages[$rule]);
 		}
+
+		return $this;
 	}
 
 	/**
@@ -218,10 +256,45 @@ class Validation {
 			throw new \InvalidArgumentException('Input for add_callable is not a valid object or class.');
 		}
 
-		// Prevent adding it twice
-		if ( ! in_array($class, $this->callables, true))
+		// Prevent having the same class twice in the array, remove to re-add on top if...
+		foreach ($this->callables as $key => $c)
 		{
-			array_unshift($this->callables, $class);
+			// ...it already exists in callables
+			if ($c === $class)
+			{
+				unset($this->callables[$key]);
+			}
+			// ...new object/class extends it or an instance of it
+			elseif (is_string($c) and (is_subclass_of($class, $c) or (is_object($class) and is_a($class, $c))))
+			{
+				unset($this->callables[$key]);
+			}
+			// but if there's a subclass in there to the new one, put the subclass on top and forget the new
+			elseif (is_string($class) and (is_subclass_of($c, $class) or (is_object($c) and is_a($c, $class))))
+			{
+				unset($this->callables[$key]);
+				$class = $c;
+			}
+		}
+
+		array_unshift($this->callables, $class);
+
+		return $this;
+	}
+
+	/*
+	 * Remove Callable
+	 *
+	 * Removes an object from the callables array
+	 *
+	 * @param   string|Object  Classname or object
+	 * @return  Validation     this, to allow chaining
+	 */
+	public function remove_callable($class)
+	{
+		if (($key = array_search($class, $this->callables, true)))
+		{
+			unset($this->callables[$key]);
 		}
 
 		return $this;
@@ -244,15 +317,24 @@ class Validation {
 	 * Performs validation with current fieldset and on given input, will try POST
 	 * when input wasn't given.
 	 *
-	 * @param   Array  input that overwrites POST values
+	 * @param   array  input that overwrites POST values
 	 * @param   bool   will skip validation of values it can't find or are null
 	 * @return  bool   whether validation succeeded
 	 */
-	public function run($input = null, $allow_partial = false)
+	public function run($input = null, $allow_partial = false, $temp_callables = array())
 	{
 		if (empty($input) && \Input::method() != 'POST')
 		{
 			return false;
+		}
+
+		// Backup current state of callables so they can be restored after adding temp callables
+		$callable_backup = $this->callables;
+
+		// Add temporary callables, reversed so first ends on top
+		foreach (array_reverse($temp_callables) as $temp_callable)
+		{
+			$this->add_callable($temp_callable);
 		}
 
 		static::set_active($this);
@@ -260,11 +342,14 @@ class Validation {
 		$this->validated = array();
 		$this->errors = array();
 		$this->input = $input ?: array();
-		$fields = $this->field();
+		$fields = $this->field(null, true);
 		foreach($fields as $field)
 		{
+			static::set_active_field($field);
+
 			$value = $this->input($field->name);
-			if ($allow_partial && $value === null)
+			if (($allow_partial === true and $value === null)
+				or (is_array($allow_partial) and ! in_array($field->name, $allow_partial)))
 			{
 				continue;
 			}
@@ -272,8 +357,8 @@ class Validation {
 			{
 				foreach ($field->rules as $rule)
 				{
-					$callback	= $rule[0];
-					$params		= $rule[1];
+					$callback  = $rule[0];
+					$params    = $rule[1];
 					$this->_run_rule($callback, $value, $params, $field);
 				}
 				$this->validated[$field->name] = $value;
@@ -285,8 +370,68 @@ class Validation {
 		}
 
 		static::set_active();
+		static::set_active_field();
+
+		// Restore callables
+		$this->callables = $callable_backup;
 
 		return empty($this->errors);
+	}
+
+	/**
+	 * Takes the rule input and formats it into a name & callback
+	 *
+	 * @param   string|array  short rule to be called on Validation callables array or full callback
+	 * @return  array|bool    rule array or false when it fails to find something callable
+	 */
+	protected function _find_rule($callback)
+	{
+		// Rules are validated and only accepted when given as an array consisting of
+		// array(callback, params) or just callbacks in an array.
+		if (is_string($callback))
+		{
+			$callback_method = '_validation_'.$callback;
+			foreach ($this->callables as $callback_class)
+			{
+				if (method_exists($callback_class, $callback_method))
+				{
+					return array($callback => array($callback_class, $callback_method));
+				}
+			}
+		}
+
+		// when no callable function was found, try regular callbacks
+		if (is_callable($callback))
+		{
+			if ($callback instanceof \Closure)
+			{
+				$callback_name = 'closure';
+			}
+			elseif (is_array($callback))
+			{
+				$callback_name = preg_replace('#^([a-z_]*\\\\)*#i', '',
+					is_object($callback[0]) ? get_class($callback[0]) : $callback[0]).':'.$callback[1];
+			}
+			else
+			{
+				$callback_name = preg_replace('#^([a-z_]*\\\\)*#i', '', str_replace('::', ':', $callback));
+			}
+			return array($callback_name => $callback);
+		}
+		elseif (is_array($callback) and is_callable(reset($callback)))
+		{
+			return $callback;
+		}
+		else
+		{
+			$string = ! is_array($callback)
+					? $callback
+					: (is_object(@$callback[0])
+						? get_class(@$callback[0]).'->'.@$callback[1]
+						: @$callback[0].'::'.@$callback[1]);
+			\Error::notice('Invalid rule "'.$string.'" passed to Validation, not used.');
+			return false;
+		}
 	}
 
 	/**
@@ -296,12 +441,17 @@ class Validation {
 	 *
 	 * @param   callback
 	 * @param   mixed     Value by reference, will be edited
-	 * @param   Array     Extra parameters
-	 * @param   Array     Validation field description
+	 * @param   array     Extra parameters
+	 * @param   array     Validation field description
 	 * @throws  Validation_Error
 	 */
 	protected function _run_rule($rule, &$value, $params, $field)
 	{
+		if (($rule = $this->_find_rule($rule)) === false)
+		{
+			return;
+		}
+
 		$output = call_user_func_array(reset($rule), array_merge(array($value), $params));
 
 		if ($output === false && $value !== false)
@@ -319,7 +469,7 @@ class Validation {
 	 *
 	 * @param   string
 	 * @param   mixed
-	 * @return  mixed
+	 * @return  mixed|array  the input value or full input values array
 	 */
 	public function input($key = null, $default = null)
 	{
@@ -330,7 +480,7 @@ class Validation {
 
 		if ( ! array_key_exists($key, $this->input))
 		{
-			$this->input[$key] = Input::post($key, $default);
+			$this->input[$key] = \Input::param($key, $default);
 		}
 
 		return $this->input[$key];
@@ -343,7 +493,7 @@ class Validation {
 	 *
 	 * @param   string  fieldname
 	 * @param   mixed   value to return when not validated
-	 * @return  Array|mixed
+	 * @return  mixed|array  the validated value or full validated values array
 	 */
 	public function validated($field = null, $default = false)
 	{
@@ -356,15 +506,15 @@ class Validation {
 	}
 
 	/**
-	 * Errors
+	 * Error
 	 *
 	 * Return specific error or all errors thrown during validation
 	 *
 	 * @param   string  fieldname
 	 * @param   mixed   value to return when not validated
-	 * @return  Array|Validation_Error
+	 * @return  Validation_Error|array  the validation error object or full array of error objects
 	 */
-	public function errors($field = null, $default = false)
+	public function error($field = null, $default = false)
 	{
 		if ($field === null)
 		{
@@ -375,11 +525,22 @@ class Validation {
 	}
 
 	/**
+	 * Alias of Validation::error() for backwards compatibility
+	 *
+	 * @depricated  Remove in v1.2
+	 */
+	public function errors($field = null, $default = false)
+	{
+		logger(\Fuel::L_WARNING, 'This method is deprecated. Please use Validation::error() instead.', __METHOD__);
+		return static::error($field, $default);
+	}
+
+	/**
 	 * Show errors
 	 *
 	 * Returns all errors in a list or with set markup from $options param
 	 *
-	 * @param   Array  uses keys open_list, close_list, open_error, close_error & no_errors
+	 * @param   array  uses keys open_list, close_list, open_error, close_error & no_errors
 	 * @return  string
 	 */
 	public function show_errors($options = array())
@@ -410,6 +571,8 @@ class Validation {
 
 	/**
 	 * Alias for $this->fieldset->add()
+	 *
+	 * @return  Fieldset_Field
 	 */
 	public function add($name, $label = '', array $attributes = array(), array $rules = array())
 	{
@@ -430,15 +593,17 @@ class Validation {
 
 	/**
 	 * Alias for $this->fieldset->field()
+	 *
+	 * @return  Fieldset_Field
 	 */
-	public function field($name = null)
+	public function field($name = null, $flatten = false)
 	{
-		return $this->fieldset->field($name);
+		return $this->fieldset->field($name, $flatten);
 	}
 
-	/**
-	 * Some validation methods
-	 */
+	/* -------------------------------------------------------------------------------
+	 * The validation methods
+	 * ------------------------------------------------------------------------------- */
 
 	/**
 	 * Required
@@ -459,7 +624,7 @@ class Validation {
 	 * @param   mixed
 	 * @return  bool
 	 */
-	public function _empty($val)
+	public static function _empty($val)
 	{
 		return ($val === false or $val === null or $val === '' or $val === array());
 	}
@@ -619,7 +784,7 @@ class Validation {
 	 * Validate input string with many options
 	 *
 	 * @param   string
-	 * @param   string|Array  either a named filter or combination of flags
+	 * @param   string|array  either a named filter or combination of flags
 	 * @return  bool
 	 */
 	public function _validation_valid_string($val, $flags = array('alpha', 'utf8'))
@@ -700,5 +865,3 @@ class Validation {
 		return $this->_empty($val) || floatval($val) <= floatval($max_val);
 	}
 }
-
-

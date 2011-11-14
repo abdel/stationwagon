@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * Image manipulation class.
  *
@@ -14,36 +14,45 @@
 
 namespace Fuel\Core;
 
-class Image_Imagick extends \Image_Driver {
+class Image_Imagick extends \Image_Driver
+{
 
 	protected $accepted_extensions = array('png', 'gif', 'jpg', 'jpeg');
 	private $imagick = null;
 
-	public function load($filename)
+	public function load($filename, $return_data = false)
 	{
 		extract(parent::load($filename));
-		
+
 		if ($this->imagick == null)
+		{
 			$this->imagick = new \Imagick();
-		
+		}
+
 		$this->imagick->readImage($filename);
-		
+
 		return $this;
 	}
 
 	protected function _crop($x1, $y1, $x2, $y2)
 	{
 		extract(parent::_crop($x1, $y1, $x2, $y2));
-		
-		$this->imagick->cropImage(($x2 - $x1), ($y2 - $y1), $y1, $x1);
+
+		$width = $x2 - $x1;
+		$height = $y2 - $y1;
+
+		$this->debug("Cropping image ".$width."x".$height."+$x1+$y1 based on coords ($x1, $y1), ($x2, $y2)");
+
+		$this->imagick->cropImage($width, $height, $x1, $y1);
+		$this->imagick->setImagePage(0, 0, 0, 0);
 	}
 
 	protected function _resize($width, $height = null, $keepar = true, $pad = true)
 	{
 		extract(parent::_resize($width, $height, $keepar, $pad));
-		
+
 		$this->imagick->scaleImage($width, $height, $keepar);
-		
+
 		if ($pad)
 		{
 			$tmpimage = new \Imagick();
@@ -56,7 +65,7 @@ class Image_Imagick extends \Image_Driver {
 	protected function _rotate($degrees)
 	{
 		extract(parent::_rotate($degrees));
-		
+
 		$this->imagick->rotateImage($this->create_color('#000', 0), $degrees);
 	}
 
@@ -72,7 +81,7 @@ class Image_Imagick extends \Image_Driver {
 	protected function _border($size, $color = null)
 	{
 		extract(parent::_border($size, $color));
-		
+
 		$this->imagick->borderImage($this->create_color($color, 100), $size, $size);
 	}
 
@@ -84,54 +93,62 @@ class Image_Imagick extends \Image_Driver {
 		$wmimage->setImageMatte(false);
 		$this->imagick->compositeImage($wmimage, \Imagick::COMPOSITE_COPYOPACITY, 0, 0);
 	}
-	
-	protected function _rounded($radius, $sides)
+
+	protected function _rounded($radius, $sides, $antialias = 0)
 	{
 		extract(parent::_rounded($radius, $sides, null));
-		
+
 		$sizes = $this->sizes();
 		$sizes->width_half = $sizes->width / 2;
 		$sizes->height_half = $sizes->height / 2;
-		
+
 		if ( ! $tl)
 		{
 			$tlimage = $this->imagick->clone();
 			$tlimage->cropImage($sizes->width_half, $sizes->height_half, 0, 0);
 		}
-		
+
 		if ( ! $tr)
 		{
 			$trimage = $this->imagick->clone();
 			$trimage->cropImage($sizes->width_half, $sizes->height_half, $sizes->width_half, 0);
 		}
-		
+
 		if ( ! $bl)
 		{
 			$blimage = $this->imagick->clone();
 			$blimage->cropImage($sizes->width_half, $sizes->height_half, 0, $sizes->height_half);
 		}
-		
+
 		if ( ! $br)
 		{
 			$brimage = $this->imagick->clone();
 			$brimage->cropImage($sizes->width_half, $sizes->height_half, $sizes->width_half, $sizes->height_half);
 		}
-		
+
 		$this->imagick->roundCorners($radius, $radius);
-		
+
 		if ( ! $tl)
+		{
 			$this->imagick->compositeImage($tlimage, \Imagick::COMPOSITE_DEFAULT, 0, 0);
-		
+		}
+
 		if ( ! $tr)
+		{
 			$this->imagick->compositeImage($trimage, \Imagick::COMPOSITE_DEFAULT, $sizes->width_half, 0);
-		
+		}
+
 		if ( ! $bl)
+		{
 			$this->imagick->compositeImage($blimage, \Imagick::COMPOSITE_DEFAULT, 0, $sizes->height_half);
-		
+		}
+
 		if ( ! $br)
+		{
 			$this->imagick->compositeImage($brimage, \Imagick::COMPOSITE_DEFAULT, $sizes->width_half, $sizes->height_half);
+		}
 	}
-	
+
 	protected function _grayscale()
 	{
 		$this->imagick->setImageType(\Imagick::IMGTYPE_GRAYSCALEMATTE);
@@ -140,52 +157,62 @@ class Image_Imagick extends \Image_Driver {
 	public function sizes($filename = null, $usecache = true)
 	{
 		if ($filename === null)
+		{
 			return (object) array(
 				'width'  => $this->imagick->getImageWidth(),
 				'height' => $this->imagick->getImageHeight()
 			);
-		else
-		{
-			$tmpimage = new \Imagick();
-			$tmpimage->readImage($filename);
-			return (object) array(
-				'width'  => $tmpimage->getImageWidth(),
-				'height' => $tmpimage->getImageHeight()
-			);
 		}
+
+		$tmpimage = new \Imagick();
+		$tmpimage->readImage($filename);
+		return (object) array(
+			'width'  => $tmpimage->getImageWidth(),
+			'height' => $tmpimage->getImageHeight()
+		);
 	}
 
 	public function save($filename, $permissions = null)
 	{
 		extract(parent::save($filename, $permissions));
-		
+
 		$this->run_queue();
 		$this->add_background();
-		
+
+		$filetype = $this->image_extension;
+
 		if ($this->imagick->getImageFormat() != $filetype)
+		{
 			$this->imagick->setImageFormat($filetype);
-		
+		}
+
 		file_put_contents($filename, $this->imagick->getImageBlob());
 
-		if ($this->config['persistent'] === false)
+		if ($this->config['persistence'] === false)
+		{
 			$this->reload();
-		
+		}
+
 		return $this;
 	}
 
 	public function output($filetype = null)
 	{
 		extract(parent::output($filetype));
-		
+
 		$this->run_queue();
 		$this->add_background();
-		
+
 		if ($this->imagick->getImageFormat() != $filetype)
+		{
 			$this->imagick->setImageFormat($filetype);
-		
+		}
+
 		if ( ! $this->config['debug'])
+		{
 			echo $this->imagick->getImageBlob();
-		
+		}
+
 		return $this;
 	}
 
@@ -238,4 +265,3 @@ class Image_Imagick extends \Image_Driver {
 		return new \ImagickPixel('rgba('.$red.', '.$green.', '.$blue.', '.round($alpha / 100, 2).')');
 	}
 }
-

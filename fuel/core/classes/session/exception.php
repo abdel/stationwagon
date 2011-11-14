@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -12,4 +12,4 @@
 
 namespace Fuel\Core;
 
-class Session_Exception extends Fuel_Exception {}
+class Session_Exception extends FuelException {}

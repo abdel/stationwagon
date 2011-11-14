@@ -13,7 +13,8 @@ namespace Fuel\Core;
 
 
 
-class DB {
+class DB
+{
 
 	// Query types
 	const SELECT =  1;
@@ -46,7 +47,7 @@ class DB {
 	{
 		return new \Database_Query($sql, $type);
 	}
-	
+
 	/*
 	 * Returns the last query
 	 *
@@ -303,7 +304,7 @@ class DB {
 	 * @param   string  db connection
 	 * @return  integer
 	 */
-	public function count_last_query($db = null)
+	public static function count_last_query($db = null)
 	{
 		return \Database_Connection::instance($db)->count_last_query();
 	}
@@ -320,7 +321,7 @@ class DB {
 	 */
 	public static function set_charset($charset, $db = null)
 	{
-		return \Database_Connection::instance($db)->set_charset($charset);
+		\Database_Connection::instance($db)->set_charset($charset);
 	}
 
 	/**
@@ -334,10 +335,11 @@ class DB {
 	 * @param   bool   use tranactions TRUE/FALSE
 	 * @param   string  db connection
 	 * @return  void
+	 * @deprecated  remove in v1.2
 	 */
 	public static function transactional($use_trans = true, $db = null)
 	{
-		return \Database_Connection::instance($db)->transactional($use_trans);
+		\Database_Connection::instance($db)->transactional($use_trans);
 	}
 
 	/**
@@ -346,7 +348,7 @@ class DB {
 	 *     DB::start_transaction();
 	 *
 	 * @param   string  db connection
-	 * @return  void
+	 * @return  bool
 	 */
 	public static function start_transaction($db = null)
 	{
@@ -359,7 +361,7 @@ class DB {
 	 *     DB::commit_transaction();
 	 *
 	 * @param   string  db connection
-	 * @return  void
+	 * @return  bool
 	 */
 	public static function commit_transaction($db = null)
 	{
@@ -372,7 +374,7 @@ class DB {
 	 *     DB::rollback_transaction();
 	 *
 	 * @param   string  db connection
-	 * @return  void
+	 * @return  bool
 	 */
 	public static function rollback_transaction($db = null)
 	{

@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -28,7 +28,16 @@ namespace Fuel\Core;
  * - create_time() uses strptime and has currently a very bad hack to use strtotime for windows servers
  * - Uses strftime formatting for dates www.php.net/manual/en/function.strftime.php
  */
-class Date {
+class Date
+{
+
+	/**
+	 * Time constants (and only those that are constant, thus not MONTH/YEAR)
+	 */
+	const WEEK = 604800;
+	const DAY = 86400;
+	const HOUR = 3600;
+	const MINUTE = 60;
 
 	/**
 	 * @var int server's time() offset from gmt in seconds
@@ -47,8 +56,8 @@ class Date {
 			{
 				$ts = strtotime($input);
 				return array(
-					'tm_year'	=> date('Y', $ts),
-					'tm_mon'	=> date('n', $ts),
+					'tm_year'	=> date('y', $ts),
+					'tm_mon'	=> date('n', $ts) - 1,
 					'tm_mday'	=> date('j', $ts),
 					'tm_hour'	=> date('H', $ts),
 					'tm_min'	=> date('i', $ts),
@@ -61,17 +70,25 @@ class Date {
 	}
 
 	/**
+	 * This method is deprecated...use forge() instead.
+	 *
+	 * @deprecated until 1.2
+	 */
+	public static function factory($timestamp = null, $timezone = null)
+	{
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a forge() instead.', __METHOD__);
+		return static::forge($timestamp, $timezone);
+	}
+
+	/**
 	 * Create Date object from timestamp, timezone is optional
 	 *
 	 * @param   int     UNIX timestamp from current server
 	 * @param   string  valid PHP timezone from www.php.net/timezones
 	 * @return  Date
 	 */
-	public static function factory($timestamp = null, $timezone = null)
+	public static function forge($timestamp = null, $timezone = null)
 	{
-		$timestamp	= is_null($timestamp) ? time() + static::$server_gmt_offset : $timestamp;
-		$timezone	= is_null($timezone) ? \Fuel::$timezone : $timezone;
-
 		return new static($timestamp, $timezone);
 	}
 
@@ -82,7 +99,7 @@ class Date {
 	 */
 	public static function time($timezone = null)
 	{
-		return static::factory(null, $timezone);
+		return static::forge(null, $timezone);
 	}
 
 	/**
@@ -97,7 +114,7 @@ class Date {
 		\Config::load('date', 'date');
 
 		$pattern = \Config::get('date.patterns.'.$pattern_key, null);
-		$pattern = ($pattern === null) ? $pattern_key : $pattern;
+		empty($pattern) and $pattern = $pattern_key;
 
 		$time = strptime($input, $pattern);
 		if ($time === false)
@@ -108,7 +125,7 @@ class Date {
 		$timestamp = mktime($time['tm_hour'], $time['tm_min'], $time['tm_sec'],
 						$time['tm_mon'] + 1, $time['tm_mday'], $time['tm_year'] + 1900);
 
-		return static::factory($timestamp + static::$server_gmt_offset);
+		return static::forge($timestamp + static::$server_gmt_offset);
 	}
 
 	/**
@@ -121,9 +138,9 @@ class Date {
 	 */
 	public static function range_to_array($start, $end, $interval = '+1 Day')
 	{
-		$start     = ( ! $start instanceof Date) ? static::factory($start) : $start;
-		$end       = ( ! $end instanceof Date) ? static::factory($end) : $end;
-		$interval  = (is_int($interval)) ? $interval : strtotime($interval, $start->get_timestamp()) - $start->get_timestamp();
+		$start     = ( ! $start instanceof Date) ? static::forge($start) : $start;
+		$end       = ( ! $end instanceof Date) ? static::forge($end) : $end;
+		is_int($interval) or $interval = strtotime($interval, $start->get_timestamp()) - $start->get_timestamp();
 
 		if ($interval <= 0)
 		{
@@ -136,7 +153,7 @@ class Date {
 		while ($current->get_timestamp() <= $end->get_timestamp())
 		{
 			$range[] = $current;
-			$current = static::factory($current->get_timestamp() + $interval);
+			$current = static::forge($current->get_timestamp() + $interval);
 		}
 
 		return $range;
@@ -154,14 +171,14 @@ class Date {
 		$year	= ! empty($year) ? (int) $year : (int) date('Y');
 		$month	= (int) $month;
 
-		if ($month < 1 || $month > 12)
+		if ($month < 1 or $month > 12)
 		{
 			\Error::notice('Invalid input for month given.');
 			return false;
 		}
 		elseif ($month == 2)
 		{
-			if ($year % 400 == 0 || ($year % 4 == 0 && $year % 100 != 0))
+			if ($year % 400 == 0 or ($year % 4 == 0 and $year % 100 != 0))
 			{
 				return 29;
 			}
@@ -206,8 +223,8 @@ class Date {
 			$periods[$j] = \Inflector::pluralize($periods[$j]);
 		}
 
-		$text = \Lang::line('date.text', array(
-			'time' => \Lang::line('date.'.$periods[$j], array('t' => $difference))
+		$text = \Lang::get('date.text', array(
+			'time' => \Lang::get('date.'.$periods[$j], array('t' => $difference))
 		));
 
 		return $text;
@@ -223,8 +240,11 @@ class Date {
 	 */
 	protected $timezone;
 
-	protected function __construct($timestamp, $timezone)
+	public function __construct($timestamp = null, $timezone = null)
 	{
+		! $timestamp and $timestamp = time() + static::$server_gmt_offset;
+		! $timezone and $timezone = \Fuel::$timezone;
+
 		$this->timestamp = $timestamp;
 		$this->set_timezone($timezone);
 	}

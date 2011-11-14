@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -36,13 +36,13 @@ if ( ! function_exists('logger'))
 {
 	function logger($level, $msg, $method = null)
 	{
-		! class_exists('Fuel\\Core\\Log') and import('log');
-		! class_exists('Log') and class_alias('Fuel\\Core\\Log', 'Log');
-
 		if ($level > \Config::get('log_threshold'))
 		{
 			return false;
 		}
+
+		! class_exists('Fuel\\Core\\Log') and import('log');
+		! class_exists('Log') and class_alias('Fuel\\Core\\Log', 'Log');
 
 		return \Log::write($level, $msg, $method);
 	}
@@ -127,22 +127,37 @@ if ( ! function_exists('in_arrayi'))
 }
 
 /**
- * Renders a view and returns the output.
+ * Gets all the public vars for an object.  Use this if you need to get all the
+ * public vars of $this inside an object.
  *
- * @param	string	The view name/path
- * @param	array	The data for the view
- * @return	string
+ * @return	array
  */
-if ( ! function_exists('render'))
+if ( ! function_exists('get_object_public_vars'))
 {
-	function render($view, $data = array())
+	function get_object_public_vars($obj)
 	{
-		return \View::factory($view, $data)->render();
+		return get_object_vars($obj);
 	}
 }
 
 /**
- * A wrapper function for Lang::line()
+ * Renders a view and returns the output.
+ *
+ * @param   string	The view name/path
+ * @param   array	The data for the view
+ * @param   bool    Auto filter override
+ * @return  string
+ */
+if ( ! function_exists('render'))
+{
+	function render($view, $data = null, $auto_filter = null)
+	{
+		return \View::forge($view, $data, $auto_filter)->render();
+	}
+}
+
+/**
+ * A wrapper function for Lang::get()
  *
  * @param	mixed	The string to translate
  * @param	array	The parameters
@@ -150,9 +165,9 @@ if ( ! function_exists('render'))
  */
 if ( ! function_exists('__'))
 {
-	function __($string, $params = array())
+	function __($string, $params = array(), $default = null)
 	{
-		return \Lang::line($string, $params);
+		return \Lang::get($string, $params, $default);
 	}
 }
 
@@ -170,32 +185,47 @@ if ( ! function_exists('e'))
 	}
 }
 
-
-if ( ! function_exists('fuel_shutdown_handler'))
+/**
+ * Takes a classname and returns the actual classname for an alias or just the classname
+ * if it's a normal class.
+ *
+ * @param   string  classname to check
+ * @return  string  real classname
+ */
+if ( ! function_exists('get_real_class'))
 {
-	function fuel_shutdown_handler()
+	function get_real_class($class)
 	{
-		return \Error::shutdown_handler();
+		static $classes = array();
+
+		if ( ! array_key_exists($class, $classes))
+		{
+			$reflect = new ReflectionClass($class);
+			$classes[$class] = $reflect->getName();
+		}
+
+		return $classes[$class];
 	}
 }
 
-if ( ! function_exists('fuel_exception_handler'))
+/**
+ * Loads in the classes used for the error handlers.  The class_exists() calls
+ * will trigger the autoloader if it is loaded, if not, then it will import
+ * the classes and do the work itself.
+ *
+ * @return  void
+ */
+if ( ! function_exists('load_error_classes'))
 {
-	function fuel_exception_handler(\Exception $e)
-	{
-		return \Error::exception_handler($e);
-	}
-}
-
-if ( ! function_exists('fuel_error_handler'))
-{
-	function fuel_error_handler($severity, $message, $filepath, $line)
+	function load_error_classes()
 	{
 		! class_exists('Fuel\\Core\\Error') and import('error');
 		! class_exists('Error') and class_alias('Fuel\\Core\\Error', 'Error');
 
-		return \Error::error_handler($severity, $message, $filepath, $line);
+		! class_exists('Fuel\\Core\\Debug') and import('debug');
+		! class_exists('Debug') and class_alias('Fuel\\Core\\Debug', 'Debug');
+
+		! class_exists('Fuel\\Core\\View') and import('view');
+		! class_exists('View') and class_alias('Fuel\\Core\\View', 'View');
 	}
 }
-
-

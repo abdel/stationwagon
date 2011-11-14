@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -18,7 +18,8 @@ import('phpseclib/Crypt/Hash', 'vendor');
 use \PHPSecLib\Crypt_AES;
 use \PHPSecLib\Crypt_Hash;
 
-class Crypt {
+class Crypt
+{
 
 	/*
 	 * Crypto object used to encrypt/decrypt
@@ -78,7 +79,7 @@ class Crypt {
 			catch (\FileAccessException $e)
 			{
 				// failed to write the config file, inform the user
-				echo \View::factory('errors/crypt_keys', array(
+				echo \View::forge('errors/crypt_keys', array(
 					'keys' => static::$config
 				));
 				die();

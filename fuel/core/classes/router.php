@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package		Fuel
  * @version		1.0
@@ -12,7 +12,8 @@
 
 namespace Fuel\Core;
 
-class Router {
+class Router
+{
 
 	public static $routes = array();
 
@@ -21,14 +22,17 @@ class Router {
 	 *
 	 * @param  string
 	 * @param  string|array|Route  either the translation for $path, an array for verb routing or an instance of Route
+	 * @param  bool                whether to prepend the route(s) to the routes array
 	 */
-	public static function add($path, $options = null)
+	public static function add($path, $options = null, $prepend = false)
 	{
 		if (is_array($path))
 		{
+			// Reverse to keep correct order in prepending
+			$prepend and $path = array_reverse($path, true);
 			foreach ($path as $p => $t)
 			{
-				static::add($p, $t);
+				static::add($p, $t, $prepend);
 			}
 			return;
 		}
@@ -47,6 +51,12 @@ class Router {
 			{
 				$options = $options[0];
 			}
+		}
+
+		if ($prepend)
+		{
+			\Arr::prepend(static::$routes, $name, new \Route($path, $options));
+			return;
 		}
 
 		static::$routes[$name] = new \Route($path, $options);
@@ -100,107 +110,85 @@ class Router {
 		if ( ! $match)
 		{
 			// Since we didn't find a match, we will create a new route.
-			$match = new Route(preg_quote($request->uri->get()), $request->uri->get());
+			$match = new Route(preg_quote($request->uri->get(), '#'), $request->uri->get());
 			$match->parse($request);
 		}
 
-		return  static::find_controller($match);
+		if ($match->callable !== null)
+		{
+			return $match;
+		}
+
+		return static::parse_match($match);
 	}
 
 	/**
 	 * Find the controller that matches the route requested
 	 *
-	 * @param	Route		the given Route object
-	 * @return	mixed		the match array or false
+	 * @param	Route  $match  the given Route object
+	 * @return	mixed  the match array or false
 	 */
-	protected static function find_controller($match)
+	protected static function parse_match($match)
 	{
+		$namespace = '\\';
+		$segments = $match->segments;
+		$module = false;
+
 		// First port of call: request for a module?
-		if (\Fuel::module_exists($match->segments[0]))
+		if (\Fuel::module_exists($segments[0]))
 		{
 			// make the module known to the autoloader
-			\Fuel::add_module($match->segments[0]);
-
-			$segments = $match->segments;
-
-			// first check if the controller is in a directory.
+			\Fuel::add_module($segments[0]);
 			$match->module = array_shift($segments);
-			$match->directory = count($segments) ? array_shift($segments) : null;
-			$match->controller = count($segments) ? array_shift($segments) : $match->module;
-
-			// does the module controller exist?
-			if (class_exists(ucfirst($match->module).'\\Controller_'.ucfirst($match->directory).'_'.ucfirst($match->controller)))
-			{
-				$match->action = count($segments) ? array_shift($segments) : null;
-				$match->method_params = $segments;
-				return $match;
-			}
-
-			$segments = $match->segments;
-
-			// then check if it's a module controller
-			$match->module = array_shift($segments);
-			$match->directory = null;
-			$match->controller = count($segments) ? array_shift($segments) : $match->module;
-
-			// does the module controller exist?
-			if (class_exists(ucfirst($match->module).'\\Controller_'.ucfirst($match->controller)))
-			{
-				$match->action = count($segments) ? array_shift($segments) : null;
-				$match->method_params = $segments;
-				return $match;
-			}
-
-			$segments = $match->segments;
-
-			// do we have a module controller with the same name as the module?
-			if ($match->controller != $match->module)
-			{
-				array_shift($segments);
-				$match->controller = $match->module;
-
-				if (class_exists(ucfirst($match->module).'\\Controller_'.ucfirst($match->controller)))
-				{
-					$match->action = count($segments) ? array_shift($segments) : null;
-					$match->method_params = $segments;
-					return $match;
-				}
-			}
-
+			$namespace .= ucfirst($match->module).'\\';
+			$module = $match->module;
 		}
 
-		$segments = $match->segments;
-
-		// It's not a module, first check if the controller is in a directory.
-		$match->directory = array_shift($segments);
-		$match->controller = count($segments) ? array_shift($segments) : $match->directory;
-
-		if (class_exists('Controller_'.ucfirst($match->directory).'_'.ucfirst($match->controller)))
+		if ($info = static::parse_segments($segments, $namespace, $module))
 		{
-			$match->action = count($segments) ? array_shift($segments) : null;
-			$match->method_params = $segments;
+			$match->controller = $info['controller'];
+			$match->action = $info['action'];
+			$match->method_params = $info['method_params'];
 			return $match;
 		}
-
-		$segments = $match->segments;
-
-		// It's not in a directory, so check for app controllers
-		$match->directory = null;
-		$match->controller = count($segments) ? array_shift($segments) : $match->directory;
-
-		// We first want to check if the controller is in a directory.
-		if (class_exists('Controller_'.ucfirst($match->controller)))
+		else
 		{
-			$match->action = count($segments) ? array_shift($segments) : null;
-			$match->method_params = $segments;
-			return $match;
+			return null;
+		}
+	}
+
+	protected static function parse_segments($segments, $namespace = '\\', $module = false)
+	{
+		$temp_segments = $segments;
+
+		foreach (array_reverse($segments, true) as $key => $segment)
+		{
+			$class = $namespace.'Controller_'.\Inflector::words_to_upper(implode('_', $temp_segments));
+			array_pop($temp_segments);
+			if (class_exists($class))
+			{
+				return array(
+					'controller'    => $class,
+					'action'        => isset($segments[$key + 1]) ? $segments[$key + 1] : null,
+					'method_params' => array_slice($segments, $key + 2),
+				);
+			}
 		}
 
-		// none of the above. I give up. We've found ziltch...
-		$match->action = null;
-		$match->controller = null;
-
-		return $match;
+		// Fall back for default module controllers
+		if ($module)
+		{
+			$class = $namespace.'Controller_'.$module;
+			if (class_exists($class))
+			{
+				return array(
+					'controller'    => $class,
+					'action'        => isset($segments[0]) ? $segments[0] : null,
+					'method_params' => array_slice($segments, 1),
+				);
+			}
+		}
+		return false;
 	}
 }
 

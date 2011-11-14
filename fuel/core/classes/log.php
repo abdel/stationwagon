@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -20,28 +20,62 @@ namespace Fuel\Core;
  * @author		Phil Sturgeon
  * @link		http://fuelphp.com/docs/classes/log.html
  */
-class Log {
+class Log
+{
 
+	public static function _init()
+	{
+		\Config::load('file', true);
+	}
+
+	/**
+	 * Logs a message with the Info Log Level
+	 *
+	 * @param   string  $msg     The log message
+	 * @param   string  $method  The method that logged
+	 * @return  bool    If it was successfully logged
+	 */
 	public static function info($msg, $method = null)
 	{
 		return static::write(\Fuel::L_INFO, $msg, $method);
 	}
 
-	// --------------------------------------------------------------------
-
+	/**
+	 * Logs a message with the Debug Log Level
+	 *
+	 * @param   string  $msg     The log message
+	 * @param   string  $method  The method that logged
+	 * @return  bool    If it was successfully logged
+	 */
 	public static function debug($msg, $method = null)
 	{
 		return static::write(\Fuel::L_DEBUG, $msg, $method);
 	}
 
-	// --------------------------------------------------------------------
+	/**
+	 * Logs a message with the Warning Log Level
+	 *
+	 * @param   string  $msg     The log message
+	 * @param   string  $method  The method that logged
+	 * @return  bool    If it was successfully logged
+	 */
+	public static function warning($msg, $method = null)
+	{
+		return static::write(\Fuel::L_WARNING, $msg, $method);
+	}
 
+	/**
+	 * Logs a message with the Error Log Level
+	 *
+	 * @param   string  $msg     The log message
+	 * @param   string  $method  The method that logged
+	 * @return  bool    If it was successfully logged
+	 */
 	public static function error($msg, $method = null)
 	{
 		return static::write(\Fuel::L_ERROR, $msg, $method);
 	}
 
-	// --------------------------------------------------------------------
 
 	/**
 	 * Write Log File
@@ -59,19 +93,13 @@ class Log {
 		{
 			return false;
 		}
-
-		switch ($level)
-		{
-			case \Fuel::L_ERROR:
-				$level = 'Error';
-			break;
-			case \Fuel::L_DEBUG:
-				$level = 'Debug';
-			break;
-			case \Fuel::L_INFO:
-				$level = 'Info';
-			break;
-		}
+		$levels = array(
+			1  => 'Error',
+			2  => 'Warning',
+			3  => 'Debug',
+			4  => 'Info',
+		);
+		$level = isset($levels[$level]) ? $levels[$level] : $level;
 
 		if (Config::get('profiling'))
 		{
@@ -83,8 +111,8 @@ class Log {
 		if ( ! is_dir($filepath))
 		{
 			$old = umask(0);
-			mkdir($filepath, 0777, true);
-			chmod($filepath, 0777);
+			mkdir($filepath, octdec(\Config::get('file.chmod.folders', 0777)), true);
+			chmod($filepath, octdec(\Config::get('file.chmod.folders', 0777)));
 			umask($old);
 		}
 
@@ -92,7 +120,7 @@ class Log {
 
 		$message  = '';
 
-		if ( ! file_exists($filename))
+		if ( ! $exists = file_exists($filename))
 		{
 			$message .= "<"."?php defined('COREPATH') or exit('No direct script access allowed'); ?".">".PHP_EOL.PHP_EOL;
 		}
@@ -117,12 +145,14 @@ class Log {
 		flock($fp, LOCK_UN);
 		fclose($fp);
 
-		$old = umask(0);
-		@chmod($filename, 0666);
-		umask($old);
+		if ( ! $exists)
+		{
+			$old = umask(0);
+			@chmod($filename, octdec(\Config::get('file.chmod.files', 0666)));
+			umask($old);
+		}
+
 		return true;
 	}
 
 }
-
-

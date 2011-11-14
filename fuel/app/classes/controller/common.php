@@ -1,7 +1,7 @@
 <?php
 
 class Controller_Common extends Controller_Template {
-	
+
 	public function before()
 	{
         parent::before();
@@ -17,11 +17,11 @@ class Controller_Common extends Controller_Template {
 
         // Check user access
         $access = Auth::has_access(array(
-            $this->request->controller, 
+            $this->request->controller,
             $this->request->action
         ));
-    
-        if ($access != true)
+
+		if ($access != true)
         {
             Response::redirect('users/login');
         }
@@ -34,12 +34,12 @@ class Controller_Common extends Controller_Template {
 		    }
         }
 	}
-	
+
 	public function action_404()
 	{
 		$messages = array('Aw, crap!', 'Bloody Hell!', 'Uh Oh!', 'Nope, not here.', 'Huh?');
 		$data['title'] = $messages[array_rand($messages)];
-		
+
 		// Set a HTTP 404 output header
 		$this->response->status = 404;
 		$this->template->content = View::factory('404', $data);

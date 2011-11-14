@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -14,24 +14,23 @@ namespace Fuel\Core;
 
 
 
-class Cache_Storage_Redis extends \Cache_Storage_Driver {
+class Cache_Storage_Redis extends \Cache_Storage_Driver
+{
 
 	/**
-	 * @const	string	Tag used for opening & closing cache properties
+	 * @const  string  Tag used for opening & closing cache properties
 	 */
 	const PROPS_TAG = 'Fuel_Cache_Properties';
 
 	/**
-	 * @var driver specific configuration
+	 * @var  array  driver specific configuration
 	 */
 	protected $config = array();
 
 	/*
-	 * @var	storage for the redis object
+	 * @var  Redis  storage for the redis object
 	 */
 	protected $redis = false;
-
-	// ---------------------------------------------------------------------
 
 	public function __construct($identifier, $config)
 	{
@@ -40,13 +39,16 @@ class Cache_Storage_Redis extends \Cache_Storage_Driver {
 		$this->config = isset($config['redis']) ? $config['redis'] : array();
 
 		// make sure we have a redis id
-		$this->config['cache_id'] = $this->_validate_config('cache_id', isset($this->config['cache_id']) ? $this->config['cache_id'] : 'fuel');
+		$this->config['cache_id'] = $this->_validate_config('cache_id', isset($this->config['cache_id'])
+			? $this->config['cache_id'] : 'fuel');
 
 		// check for an expiration override
-		$this->expiration = $this->_validate_config('expiration', isset($this->config['expiration']) ? $this->config['expiration'] : $this->expiration);
+		$this->expiration = $this->_validate_config('expiration', isset($this->config['expiration'])
+			? $this->config['expiration'] : $this->expiration);
 
 		// make sure we have a redis database configured
-		$this->config['database'] = $this->_validate_config('database', isset($this->config['database']) ? $this->config['database'] : 'default');
+		$this->config['database'] = $this->_validate_config('database', isset($this->config['database'])
+			? $this->config['database'] : 'default');
 
 		if ($this->redis === false)
 		{
@@ -57,32 +59,28 @@ class Cache_Storage_Redis extends \Cache_Storage_Driver {
 			}
 			catch (\Exception $e)
 			{
-				throw new \Fuel_Exception('Can not connect to the Redis engine. The error message says "'.$e->getMessage().'".');
+				throw new \FuelException('Can not connect to the Redis engine. The error message says "'.$e->getMessage().'".');
 			}
 
 			// get the redis version
 			preg_match('/redis_version:(.*?)\n/', $this->redis->info(), $info);
 			if (version_compare(trim($info[1]), '1.2') < 0)
 			{
-				throw new \Fuel_Exception('Version 1.2 or higher of the Redis NoSQL engine is required to use the redis cache driver.');
+				throw new \FuelException('Version 1.2 or higher of the Redis NoSQL engine is required to use the redis cache driver.');
 			}
 		}
 	}
 
-	// ---------------------------------------------------------------------
-
 	/**
 	 * Translates a given identifier to a valid redis key
 	 *
-	 * @param	string
-	 * @return	string
+	 * @param   string
+	 * @return  string
 	 */
 	protected function identifier_to_key( $identifier )
 	{
 		return $this->config['cache_id'].':'.$identifier;
 	}
-
-	// ---------------------------------------------------------------------
 
 	/**
 	 * Prepend the cache properties
@@ -92,17 +90,15 @@ class Cache_Storage_Redis extends \Cache_Storage_Driver {
 	protected function prep_contents()
 	{
 		$properties = array(
-			'created'			=> $this->created,
-			'expiration'		=> $this->expiration,
-			'dependencies'		=> $this->dependencies,
-			'content_handler'	=> $this->content_handler
+			'created'          => $this->created,
+			'expiration'       => $this->expiration,
+			'dependencies'     => $this->dependencies,
+			'content_handler'  => $this->content_handler
 		);
-		$properties = '{{'.self::PROPS_TAG.'}}'.json_encode($properties).'{{/'.self::PROPS_TAG.'}}';
+		$properties = '{{'.static::PROPS_TAG.'}}'.json_encode($properties).'{{/'.static::PROPS_TAG.'}}';
 
-		return $properties . $this->contents;
+		return $properties.$this->contents;
 	}
-
-	// ---------------------------------------------------------------------
 
 	/**
 	 * Remove the prepended cache properties and save them in class properties
@@ -112,35 +108,33 @@ class Cache_Storage_Redis extends \Cache_Storage_Driver {
 	 */
 	protected function unprep_contents($payload)
 	{
-		$properties_end = strpos($payload, '{{/'.self::PROPS_TAG.'}}');
+		$properties_end = strpos($payload, '{{/'.static::PROPS_TAG.'}}');
 		if ($properties_end === FALSE)
 		{
 			throw new \UnexpectedValueException('Cache has bad formatting');
 		}
 
-		$this->contents = substr($payload, $properties_end + strlen('{{/'.self::PROPS_TAG.'}}'));
-		$props = substr(substr($payload, 0, $properties_end), strlen('{{'.self::PROPS_TAG.'}}'));
+		$this->contents = substr($payload, $properties_end + strlen('{{/'.static::PROPS_TAG.'}}'));
+		$props = substr(substr($payload, 0, $properties_end), strlen('{{'.static::PROPS_TAG.'}}'));
 		$props = json_decode($props, true);
 		if ($props === NULL)
 		{
 			throw new \UnexpectedValueException('Cache properties retrieval failed');
 		}
 
-		$this->created			= $props['created'];
-		$this->expiration		= is_null($props['expiration']) ? null : (int) ($props['expiration'] - time());
-		$this->dependencies		= $props['dependencies'];
-		$this->content_handler	= $props['content_handler'];
+		$this->created          = $props['created'];
+		$this->expiration       = is_null($props['expiration']) ? null : (int) ($props['expiration'] - time());
+		$this->dependencies     = $props['dependencies'];
+		$this->content_handler  = $props['content_handler'];
 	}
-
-	// ---------------------------------------------------------------------
 
 	/**
 	 * Check if other caches or files have been changed since cache creation
 	 *
-	 * @param	array
-	 * @return	bool
+	 * @param   array
+	 * @return  bool
 	 */
-	public function check_dependencies(Array $dependencies)
+	public function check_dependencies(array $dependencies)
 	{
 		foreach($dependencies as $dep)
 		{
@@ -174,8 +168,6 @@ class Cache_Storage_Redis extends \Cache_Storage_Driver {
 		return true;
 	}
 
-	// ---------------------------------------------------------------------
-
 	/**
 	 * Delete Cache
 	 */
@@ -193,13 +185,11 @@ class Cache_Storage_Redis extends \Cache_Storage_Driver {
 		$this->reset();
 	}
 
-	// ---------------------------------------------------------------------
-
 	/**
 	 * Purge all caches
 	 *
-	 * @param	limit purge to subsection
-	 * @return	bool
+	 * @param   limit purge to subsection
+	 * @return  bool
 	 */
 	public function delete_all($section)
 	{
@@ -259,12 +249,10 @@ class Cache_Storage_Redis extends \Cache_Storage_Driver {
 		}
 	}
 
-	// ---------------------------------------------------------------------
-
 	/**
 	 * Save a cache, this does the generic pre-processing
 	 *
-	 * @return	bool
+	 * @return  bool  success
 	 */
 	protected function _set()
 	{
@@ -277,14 +265,14 @@ class Cache_Storage_Redis extends \Cache_Storage_Driver {
 		{
 			$this->redis->expireat($key, $this->expiration);
 		}
-	}
 
-	// ---------------------------------------------------------------------
+		return true;
+	}
 
 	/**
 	 * Load a cache, this does the generic post-processing
 	 *
-	 * @return bool
+	 * @return  bool  success
 	 */
 	protected function _get()
 	{
@@ -299,20 +287,16 @@ class Cache_Storage_Redis extends \Cache_Storage_Driver {
 		}
 		catch (\UnexpectedValueException $e)
 		{
-
 			return false;
 		}
 
 		return true;
 	}
 
-	// ---------------------------------------------------------------------
-
 	/**
 	 * get's the memcached key belonging to the cache identifier
 	 *
-	 * @access	private
-	 * @param	bool		if true, remove the key retrieved from the index
+	 * @param   bool  if true, remove the key retrieved from the index
 	 * @return  string
 	 */
 	private function _get_key($remove = false)
@@ -388,12 +372,9 @@ class Cache_Storage_Redis extends \Cache_Storage_Driver {
 		return $key;
 	}
 
-	// ---------------------------------------------------------------------
-
 	/**
 	 * generate a new unique key for the current identifier
 	 *
-	 * @access	private
 	 * @return  string
 	 */
 	private function _new_key()
@@ -406,14 +387,11 @@ class Cache_Storage_Redis extends \Cache_Storage_Driver {
 		return $this->config['cache_id'].'_'.uniqid($key);
 	}
 
-	// ---------------------------------------------------------------------
-
 	/**
 	 * validate a driver config value
 	 *
-	 * @param	string	name of the config variable to validate
-	 * @param	mixed	value
-	 * @access	private
+	 * @param   string  name of the config variable to validate
+	 * @param   mixed   value
 	 * @return  mixed
 	 */
 	private function _validate_config($name, $value)
@@ -449,17 +427,14 @@ class Cache_Storage_Redis extends \Cache_Storage_Driver {
 		return $value;
 	}
 
-	// --------------------------------------------------------------------
-
 	/**
 	 * Serialize an array
 	 *
 	 * This function first converts any slashes found in the array to a temporary
 	 * marker, so when it gets unserialized the slashes will be preserved
 	 *
-	 * @access	private
-	 * @param	array
-	 * @return	string
+	 * @param   array
+	 * @return  string
 	 */
 	protected function _serialize($data)
 	{
@@ -484,17 +459,14 @@ class Cache_Storage_Redis extends \Cache_Storage_Driver {
 		return serialize($data);
 	}
 
-	// --------------------------------------------------------------------
-
 	/**
 	 * Unserialize
 	 *
 	 * This function unserializes a data string, then converts any
 	 * temporary slash markers back to actual slashes
 	 *
-	 * @access	private
-	 * @param	array
-	 * @return	string
+	 * @param   array
+	 * @return  string
 	 */
 	protected function _unserialize($data)
 	{
@@ -515,7 +487,4 @@ class Cache_Storage_Redis extends \Cache_Storage_Driver {
 
 		return (is_string($data)) ? str_replace('{{slash}}', '\\', $data) : $data;
 	}
-
 }
-
-

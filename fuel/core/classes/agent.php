@@ -1,8 +1,6 @@
 <?php
 /**
- * Fuel
- *
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -27,68 +25,69 @@ namespace Fuel\Core;
  * @author      Harro Verton
  */
 
-class Agent {
+class Agent
+{
 
 	/**
 	 * @var  array  information about the current browser
 	 */
 	protected static $properties = array(
-		'Browser'             => 'unknown',
-		'Version'             => 0,
-		'MajorVer'            => 0,
-		'MinorVer'            => 0,
-		'Platform'            => 'unknown',
-		'Alpha'               => false,
-		'Beta'                => false,
-		'Win16'               => false,
-		'Win32'               => false,
-		'Win64'               => false,
-		'Frames'              => false,
-		'IFrames'             => false,
-		'Tables'              => false,
-		'Cookies'             => false,
-		'BackgroundSounds'    => false,
-		'JavaScript'          => false,
-		'VBScript'            => false,
-		'JavaApplets'         => false,
-		'ActiveXControls'     => false,
-		'isBanned'            => false,
-		'isMobile'            => false,
-		'isSyndicationReader' => false,
-		'Crawler'             => false,
-		'CssVersion'          => 0,
-		'AolVersion'          => 0,
+		'browser'             => 'unknown',
+		'version'             => 0,
+		'majorver'            => 0,
+		'minorver'            => 0,
+		'platform'            => 'unknown',
+		'alpha'               => false,
+		'beta'                => false,
+		'win16'               => false,
+		'win32'               => false,
+		'win64'               => false,
+		'frames'              => false,
+		'iframes'             => false,
+		'tables'              => false,
+		'cookies'             => false,
+		'backgroundsounds'    => false,
+		'javascript'          => false,
+		'vbscript'            => false,
+		'javaapplets'         => false,
+		'activexcontrols'     => false,
+		'isbanned'            => false,
+		'ismobile'            => false,
+		'issyndicationreader' => false,
+		'crawler'             => false,
+		'cssversion'          => 0,
+		'aolversion'          => 0,
 	);
 
 	/**
 	 * @var  array  property to cache key mapping
 	 */
 	protected static $keys = array(
-		'Browser'             => 'A',
-		'Version'             => 'B',
-		'MajorVer'            => 'C',
-		'MinorVer'            => 'D',
-		'Platform'            => 'E',
-		'Alpha'               => 'F',
-		'Beta'                => 'G',
-		'Win16'               => 'H',
-		'Win32'               => 'I',
-		'Win64'               => 'J',
-		'Frames'              => 'K',
-		'IFrames'             => 'L',
-		'Tables'              => 'M',
-		'Cookies'             => 'N',
-		'BackgroundSounds'    => 'O',
-		'JavaScript'          => 'P',
-		'VBScript'            => 'Q',
-		'JavaApplets'         => 'R',
-		'ActiveXControls'     => 'S',
-		'isBanned'            => 'T',
-		'isMobile'            => 'U',
-		'isSyndicationReader' => 'V',
-		'Crawler'             => 'W',
-		'CssVersion'          => 'X',
-		'AolVersion'          => 'Y',
+		'browser'             => 'A',
+		'version'             => 'B',
+		'majorver'            => 'C',
+		'minorver'            => 'D',
+		'platform'            => 'E',
+		'alpha'               => 'F',
+		'beta'                => 'G',
+		'win16'               => 'H',
+		'win32'               => 'I',
+		'win64'               => 'J',
+		'frames'              => 'K',
+		'iframes'             => 'L',
+		'tables'              => 'M',
+		'cookies'             => 'N',
+		'backgroundsounds'    => 'O',
+		'javascript'          => 'P',
+		'vbscript'            => 'Q',
+		'javaapplets'         => 'R',
+		'activexcontrols'     => 'S',
+		'isbanned'            => 'T',
+		'ismobile'            => 'U',
+		'issyndicationreader' => 'V',
+		'crawler'             => 'W',
+		'cssversion'          => 'X',
+		'aolversion'          => 'Y',
 	);
 
 	/**
@@ -97,7 +96,7 @@ class Agent {
 	protected static $defaults = array(
 		'browscap' => array(
 			'enabled' => true,
-			'url' => 'http://browsers.garykeith.com/stream.asp?BrowsCapINI',
+			'url' => 'http://browsers.garykeith.com/stream.asp?Lite_PHP_BrowsCapINI',
 			'method' => 'wrapper',
 			'file' => '',
 		),
@@ -190,24 +189,17 @@ class Agent {
 			}
 		}
 
-		// check if we have the browser info in cache
-		if (false === $browser = static::get_from_cache())
+		// try the build in get_browser() method
+		if (ini_get('browscap') == '' or false === $browser = get_browser(null, true))
 		{
-			// if not, try the build in get_browser() method
-			if (ini_get('browscap') == '' or false === $browser = get_browser())
-			{
-				// if all else fails, emulate get_browser()
-				$browser = static::get_from_browscap();
-			}
+			// if it fails, emulate get_browser()
+			$browser = static::get_from_browscap();
 		}
 
 		if ($browser)
 		{
 			// save it for future reference
-			static::$properties = $browser;
-
-			// store the result in local cache
-			static::add_to_cache();
+			static::$properties = array_change_key_case($browser);
 		}
 	}
 
@@ -220,7 +212,7 @@ class Agent {
 	 */
 	public static function browser()
 	{
-		return static::$properties['Browser'];
+		return static::$properties['browser'];
 	}
 
 	// --------------------------------------------------------------------
@@ -232,7 +224,7 @@ class Agent {
 	 */
 	public static function platform()
 	{
-		return static::$properties['Platform'];
+		return static::$properties['platform'];
 	}
 
 	// --------------------------------------------------------------------
@@ -244,7 +236,7 @@ class Agent {
 	 */
 	public static function version()
 	{
-		return static::$properties['Version'];
+		return static::$properties['version'];
 	}
 
 	// --------------------------------------------------------------------
@@ -256,6 +248,7 @@ class Agent {
 	 */
 	public static function property($property = null)
 	{
+		$property = strtolower($property);
 		return array_key_exists($property, static::$properties) ? static::$properties[$property] : null;
 	}
 
@@ -264,7 +257,7 @@ class Agent {
 	/**
 	 * Get all browser properties
 	 *
-	 * @return	string
+	 * @return	array
 	 */
 	public static function properties()
 	{
@@ -280,7 +273,7 @@ class Agent {
 	 */
 	public static function is_robot()
 	{
-		return static::$properties['Crawler'];
+		return static::$properties['crawler'];
 	}
 
 	// --------------------------------------------------------------------
@@ -292,7 +285,7 @@ class Agent {
 	 */
 	public static function is_mobile()
 	{
-		return static::$properties['isMobile'];
+		return static::$properties['ismobile'];
 	}
 
 	// --------------------------------------------------------------------
@@ -350,65 +343,13 @@ class Agent {
 	// --------------------------------------------------------------------
 
 	/**
-	 * add the detected browser info to the cache for this user agent string
-	 *
-	 * @param	bool	indicates if we were able to get the browser information
-	 * @return	void
-	 */
-	protected static function add_to_cache()
-	{
-		$cache = \Cache::factory(static::$config['cache']['identifier'].'.cache');
-
-		// save the cached user agent strings
-		try
-		{
-			$content = $cache->get();
-		}
-		catch (\Exception $e)
-		{
-			$content = array();
-		}
-
-		$content[static::$user_agent] = static::$properties;
-
-		// save the updated cache file
-		$cache->set($content, static::$config['cache']['expiry']);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * load the cached user agent strings, and look for a match
-	 *
-	 * @return	mixed	array if a match is found, of false if not cached yet
-	 */
-	protected static function get_from_cache()
-	{
-		$cache = \Cache::factory(static::$config['cache']['identifier'].'.cache');
-
-		// save the cached user agent strings
-		try
-		{
-			$content = $cache->get();
-		}
-		catch (\Exception $e)
-		{
-			return false;
-		}
-
-		return array_key_exists(static::$user_agent, $cache) ? $content[static::$user_agent] : false;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
 	 * use the parsed php_browscap.ini file to find a user agent match
 	 *
 	 * @return	mixed	array if a match is found, of false if not cached yet
 	 */
 	protected static function get_from_browscap()
 	{
-		$cache = \Cache::factory(static::$config['cache']['identifier'].'.browscap');
+		$cache = \Cache::forge(static::$config['cache']['identifier'].'.browscap');
 
 		// load the cached browscap data
 		try
@@ -433,7 +374,7 @@ class Agent {
 			if (preg_match($pattern, static::$user_agent))
 			{
 				// store the browser name
-				$properties['Browser'] = $browser;
+				$properties['browser'] = $browser;
 
 				// fetch possible parent info
 				if (array_key_exists('Parent', $properties))
@@ -445,12 +386,12 @@ class Agent {
 						$properties = array_merge(current($parent), $properties);
 
 						// store the browser name
-						$properties['Browser'] = key($parent);
+						$properties['browser'] = key($parent);
 					}
 				}
 
 				// normalize keys
-				$properties = \Arr::replace_keys($properties, array_flip(static::$keys));
+				$properties = \Arr::replace_key($properties, array_flip(static::$keys));
 
 				// merge it with the defaults to add missing values
 				$result = array_merge(static::$properties, $properties);
@@ -549,7 +490,7 @@ class Agent {
 				}
 			}
 
-			$result[$browser] = \Arr::replace_keys($properties, static::$keys);
+			$result[$browser] = \Arr::replace_key($properties, static::$keys);
 
 		}
 
@@ -579,12 +520,10 @@ class Agent {
 		// save the result to the cache
 		if ( ! empty($result))
 		{
-			$cache = \Cache::factory(static::$config['cache']['identifier'].'.browscap');
+			$cache = \Cache::forge(static::$config['cache']['identifier'].'.browscap');
 			$cache->set($result, static::$config['cache']['expiry']);
 		}
 
 		return $result;
 	}
 }
-
-

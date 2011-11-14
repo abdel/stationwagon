@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -19,7 +19,162 @@ namespace Fuel\Core;
  * @package     Fuel
  * @subpackage  Core
  */
-class Arr {
+class Arr
+{
+
+	/**
+	 * Gets a dot-notated key from an array, with a default value if it does
+	 * not exist.
+	 *
+	 * @param   array   $array    The search array
+	 * @param   mixed   $key      The dot-notated key or array of keys
+	 * @param   string  $default  The default value
+	 * @return  mixed
+	 */
+	public static function get($array, $key, $default = null)
+	{
+		if ( ! is_array($array) or $array instanceof \ArrayAccess)
+		{
+			throw new \InvalidArgumentException('First parameter must be an array or ArrayAccess object.');
+		}
+
+		if (is_null($key))
+		{
+			return $array;
+		}
+
+		if (is_array($key))
+		{
+			$return = array();
+			foreach ($key as $k)
+			{
+				$return[$k] = static::get($array, $k, $default);
+			}
+			return $return;
+		}
+
+		foreach (explode('.', $key) as $key_part)
+		{
+			if ( ! is_array($array) or ! array_key_exists($key_part, $array))
+			{
+				return \Fuel::value($default);
+			}
+
+			$array = $array[$key_part];
+		}
+
+		return $array;
+	}
+
+	/**
+	 * Set an array item (dot-notated) to the value.
+	 *
+	 * @param   array   $array  The array to insert it into
+	 * @param   mixed   $key    The dot-notated key to set or array of keys
+	 * @param   mixed   $value  The value
+	 * @return  void
+	 */
+	public static function set(&$array, $key, $value = null)
+	{
+		if (is_null($key))
+		{
+			$array = $value;
+			return;
+		}
+
+		if (is_array($key))
+		{
+			foreach ($key as $k => $v)
+			{
+				static::set($array, $k, $value);
+			}
+		}
+
+		$keys = explode('.', $key);
+
+		while (count($keys) > 1)
+		{
+			$key = array_shift($keys);
+
+			if ( ! isset($array[$key]) or ! is_array($array[$key]))
+			{
+				$array[$key] = array();
+			}
+
+			$array =& $array[$key];
+		}
+
+		$array[array_shift($keys)] = $value;
+	}
+	
+	/**
+	 * Array_key_exists with a dot-notated key from an array.
+	 *
+	 * @param   array   $array    The search array
+	 * @param   mixed   $key      The dot-notated key or array of keys
+	 * @return  mixed
+	 */
+	public static function key_exists($array, $key)
+	{
+		foreach (explode('.', $key) as $key_part)
+		{
+			if ( ! is_array($array) or ! array_key_exists($key_part, $array))
+			{
+				return false;
+			}
+
+			$array = $array[$key_part];
+		}
+
+		return true;
+	}
+
+	/**
+	 * Unsets dot-notated key from an array
+	 *
+	 * @param   array   $array    The search array
+	 * @param   mixed   $key      The dot-notated key or array of keys
+	 * @param   string  $default  The default value
+	 * @return  mixed
+	 */
+	public static function delete(&$array, $key)
+	{
+		if (is_null($key))
+		{
+			return false;
+		}
+
+		if (is_array($key))
+		{
+			$return = array();
+			foreach ($key as $k)
+			{
+				$return[$k] = static::delete($array, $k);
+			}
+			return $return;
+		}
+
+		$key_parts = explode('.', $key);
+
+		if ( ! is_array($array) or ! array_key_exists($key_parts[0], $array))
+		{
+			return false;
+		}
+
+		$this_key = array_shift($key_parts);
+
+		if ( ! empty($key_parts))
+		{
+			$key = implode('.', $key_parts);
+			return static::delete($array[$this_key], $key);
+		}
+		else
+		{
+			unset($array[$this_key]);
+		}
+
+		return true;
+	}
 
 	/**
 	 * Converts a multi-dimensional associative array into an array of key => values with the provided field names
@@ -183,31 +338,11 @@ class Arr {
 	 * @param   mixed  the key to fetch from the array
 	 * @param   mixed  the value returned when not an array or invalid key
 	 * @return  mixed
+	 * @deprecated until 1.2
 	 */
 	public static function element($array, $key, $default = false)
 	{
-		$key = explode('.', $key);
-		if(count($key) > 1)
-		{
-			if ( ! is_array($array) or ! array_key_exists($key[0], $array))
-			{
-				return $default;
-			}
-			$array = $array[$key[0]];
-			unset($key[0]);
-			$key = implode('.', $key);
-			$array = static::element($array, $key, $default);
-			return $array;
-		}
-		else
-		{
-			$key = $key[0];
-			if ( ! is_array($array) or ! array_key_exists($key, $array))
-			{
-				return $default;
-			}
-			return $array[$key];
-		}
+		return static::get($array, $key, $default);
 	}
 
 	/**
@@ -217,29 +352,11 @@ class Arr {
 	 * @param   array  the keys to fetch from the array
 	 * @param   mixed  the value returned when not an array or invalid key
 	 * @return  mixed
+	 * @deprecated until 1.2
 	 */
 	public static function elements($array, $keys, $default = false)
 	{
-		$return = array();
-
-		if ( ! is_array($array) or ! is_array($keys))
-		{
-			throw new \InvalidArgumentException('Arr::elements() - $keys and $array must be arrays.');
-		}
-
-		foreach ($keys as $key)
-		{
-			if ( ! array_key_exists($key, $array))
-			{
-				$return[$key] = $default;
-			}
-			else
-			{
-				$return[$key] = $array[$key];
-			}
-		}
-
-		return $return;
+		return static::get($array, $keys, $default);
 	}
 
 	/**
@@ -251,7 +368,7 @@ class Arr {
 	 * @param   int          the numeric position at which to insert, negative to count from the end backwards
 	 * @return  bool         false when array shorter then $pos, otherwise true
 	 */
-	public static function insert(Array &$original, $value, $pos)
+	public static function insert(array &$original, $value, $pos)
 	{
 		if (count($original) < abs($pos))
 		{
@@ -272,7 +389,7 @@ class Arr {
 	 * @param   string|int   the key after which to insert
 	 * @return  bool         false when key isn't found in the array, otherwise true
 	 */
-	public static function insert_after_key(Array &$original, $value, $key)
+	public static function insert_after_key(array &$original, $value, $key)
 	{
 		$pos = array_search($key, array_keys($original));
 		if ($pos === false)
@@ -292,7 +409,7 @@ class Arr {
 	 * @param   string|int   the value after which to insert
 	 * @return  bool         false when value isn't found in the array, otherwise true
 	 */
-	public static function insert_after_value(Array &$original, $value, $search)
+	public static function insert_after_value(array &$original, $value, $search)
 	{
 		$key = array_search($search, $original);
 		if ($key === false)
@@ -367,17 +484,32 @@ class Arr {
 	}
 
 	/**
+	 * Alias for replace_key for backwards compatibility.
+	 */
+	public static function replace_keys($source, $replace, $new_key = null)
+	{
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a replace_key() instead.', __METHOD__);
+		return static::replace_key($source, $replace, $new_key);
+	}
+
+	/**
 	 * Replaces key names in an array by names in $replace
 	 *
-	 * @param   array    the array containing the key/value combinations
-	 * @param   array    the array containing the replacement keys
-	 * @return  array    the array with the new keys
+	 * @param   array			the array containing the key/value combinations
+	 * @param   array|string	key to replace or array containing the replacement keys
+	 * @param   string			the replacement key
+	 * @return  array			the array with the new keys
 	 */
-	public static function replace_keys($source, $replace)
+	public static function replace_key($source, $replace, $new_key = null)
 	{
+		if(is_string($replace))
+		{
+			$replace = array($replace => $new_key);
+		}
+
 		if ( ! is_array($source) or ! is_array($replace))
 		{
-			throw new \InvalidArgumentException('Arr::replace_keys() - $source and $replace must arrays.');
+			throw new \InvalidArgumentException('Arr::replace_keys() - $source must an array. $replace must be an array or string.');
 		}
 
 		$result = array();
@@ -444,6 +576,19 @@ class Arr {
 		}
 
 		return $array;
+	}
+	
+	/**
+	 * Prepends a value with an asociative key to an array.
+	 * Will overwrite if the value exists.
+	 *
+	 * @param   array           $arr     the array to prepend to
+	 * @param   string|array    $key     the key or array of keys and values
+	 * @param   mixed           $valye   the value to prepend
+	 */
+	public static function prepend(&$arr, $key, $value = null)
+	{
+		$arr = (is_array($key) ? $key : array($key => $value)) + $arr;
 	}
 
 }

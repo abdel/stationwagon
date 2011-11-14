@@ -12,18 +12,26 @@
 namespace Fuel\Core;
 
 
-class Database_PDO_Connection extends \Database_Connection {
+class Database_PDO_Connection extends \Database_Connection
+{
+	/**
+	 * @var  \PDO  Raw server connection
+	 */
+	protected $_connection;
 
-	// PDO uses no quoting for identifiers
+	/**
+	 * @var  string  PDO uses no quoting by default for identifiers
+	 */
 	protected $_identifier = '';
 
-	// Allows transactions
-	protected $_trans_enabled = FALSE;
+	/**
+	 * @var  bool  Allows transactions
+	 */
+	protected $_in_transaction = false;
 
-	// transaction errors
-	public $trans_errors = FALSE;
-
-	// Know which kind of DB is used
+	/**
+	 * @var  string  Which kind of DB is used
+	 */
 	public $_db_type = '';
 
 	protected function __construct($name, array $config)
@@ -40,18 +48,20 @@ class Database_PDO_Connection extends \Database_Connection {
 	public function connect()
 	{
 		if ($this->_connection)
+		{
 			return;
+		}
 
 		// Extract the connection parameters, adding required variabels
 		extract($this->_config['connection'] + array(
 			'dsn'        => '',
-			'username'   => NULL,
-			'password'   => NULL,
-			'persistent' => FALSE,
+			'username'   => null,
+			'password'   => null,
+			'persistent' => false,
 		));
 
 		// Clear the connection parameters for security
-		unset($this->_config['connection']);
+		$this->_config['connection'] = array();
 
 		// determine db type
 		$_dsn_find_collon = strpos($dsn, ':');
@@ -86,7 +96,7 @@ class Database_PDO_Connection extends \Database_Connection {
 	public function disconnect()
 	{
 		// Destroy the PDO object
-		$this->_connection = NULL;
+		$this->_connection = null;
 
 		return TRUE;
 	}
@@ -123,23 +133,8 @@ class Database_PDO_Connection extends \Database_Connection {
 				Profiler::delete($benchmark);
 			}
 
-			if ($type !== \DB::SELECT && $this->_trans_enabled)
-			{
-				// If we are using transactions, throwing an exception would defeat the purpose
-				// We need to log the failures for transaction status
-				if ( ! is_array($this->trans_errors))
-				{
-					$this->trans_errors = array();
-				}
-
-				$this->trans_errors[] = $e->getMessage().' with query: "'.$sql.'"';
-				return false;
-			}
-			else
-			{
-				// Convert the exception in a database exception
-				throw new \Database_Exception($e->getMessage().' with query: "'.$sql.'"');
-			}
+			// Convert the exception in a database exception
+			throw new \Database_Exception($e->getMessage().' with query: "'.$sql.'"');
 		}
 
 		if (isset($benchmark))
@@ -186,14 +181,14 @@ class Database_PDO_Connection extends \Database_Connection {
 		}
 	}
 
-	public function list_tables($like = NULL)
+	public function list_tables($like = null)
 	{
-		throw new \Fuel_Exception('Database method '.__METHOD__.' is not supported by '.__CLASS__);
+		throw new \FuelException('Database method '.__METHOD__.' is not supported by '.__CLASS__);
 	}
 
-	public function list_columns($table, $like = NULL)
+	public function list_columns($table, $like = null)
 	{
-		throw new \Fuel_Exception('Database method '.__METHOD__.' is not supported by '.__CLASS__);
+		throw new \FuelException('Database method '.__METHOD__.' is not supported by '.__CLASS__);
 	}
 
 	public function escape($value)
@@ -204,27 +199,28 @@ class Database_PDO_Connection extends \Database_Connection {
 		return $this->_connection->quote($value);
 	}
 
-	public function transactional($use_trans = TRUE)
+	public function in_transaction()
 	{
-		if (is_bool($use_trans)) {
-			$this->_trans_enabled = $use_trans;
-		}
+		return $this->_in_transaction;
 	}
 
 	public function start_transaction()
 	{
-		$this->transactional();
-		$this->_connection->beginTransaction();
+		$this->_connection or $this->connect();
+		$this->_in_transaction = true;
+		return $this->_connection->beginTransaction();
 	}
 
 	public function commit_transaction()
 	{
-		$this->_connection->commit();
+		$this->_in_transaction = false;
+		return $this->_connection->commit();
 	}
 
 	public function rollback_transaction()
 	{
-		$this->_connection->rollBack();
+		$this->_in_transaction = false;
+		return $this->_connection->rollBack();
 	}
 
-} // End Database_PDO
+}

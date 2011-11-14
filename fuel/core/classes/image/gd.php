@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * Image manipulation class.
  *
@@ -14,7 +14,8 @@
 
 namespace Fuel\Core;
 
-class Image_Gd extends \Image_Driver {
+class Image_Gd extends \Image_Driver
+{
 
 	private $image_data = null;
 	protected $accepted_extensions = array('png', 'gif', 'jpg', 'jpeg');
@@ -26,11 +27,12 @@ class Image_Gd extends \Image_Driver {
 		$return = false;
 		$image_extension == 'jpg' and $image_extension = 'jpeg';
 
-		if ( ! $return_data) {
+		if ( ! $return_data)
+		{
 			$this->image_data !== null and imagedestroy($this->image_data);
 			$this->image_data = null;
 		}
-		
+
 		// Check if the function exists
 		if (function_exists('imagecreatefrom'.$image_extension))
 		{
@@ -51,7 +53,7 @@ class Image_Gd extends \Image_Driver {
 		}
 		else
 		{
-			throw new \Fuel_Exception("Function imagecreatefrom".$image_extension."() does not exist (Missing GD?)");
+			throw new \RuntimeException("Function imagecreatefrom".$image_extension."() does not exist (Missing GD?)");
 		}
 		return $return_data ? $return : $this;
 	}
@@ -95,7 +97,7 @@ class Image_Gd extends \Image_Driver {
 		$values = parent::_watermark($filename, $position, $padding);
 		if ($values == false)
 		{
-			throw new \Fuel_Exception("Watermark image not found or invalid filetype.");
+			throw new \InvalidArgumentException("Watermark image not found or invalid filetype.");
 		}
 		else
 		{
@@ -223,16 +225,18 @@ class Image_Gd extends \Image_Driver {
 		$bl and $this->round_corner($this->image_data, $radius, $antialias, false, true);
 		$br and $this->round_corner($this->image_data, $radius, $antialias, false, false);
 	}
-	
+
 	protected function _grayscale()
 	{
 		$sizes = $this->sizes();
-		
+
 		// Create the 256 color palette
 		$bwpalette = array();
 		for ($i = 0; $i < 256; $i++)
+		{
 			$bwpalette[$i] = imagecolorallocate($this->image_data, $i, $i, $i);
-		
+		}
+
 		for ($x = 0; $x < $sizes->width; $x++)
 		{
 			for ($y = 0; $y < $sizes->height; $y++)
@@ -241,11 +245,13 @@ class Image_Gd extends \Image_Driver {
 				$red   = ($color >> 16) & 0xFF;
 				$green = ($color >> 8) & 0xFF;
 				$blue  = $color & 0xFF;
-				
+
 				// If its black or white, theres no use in setting the pixel
 				if (($red == 0 && $green == 0 && $blue == 0) || ($red == 255 && $green == 255 && $blue == 255))
+				{
 					continue;
-				
+				}
+
 				// Now set the color
 				$shade = (($red*0.299)+($green*0.587)+($blue*0.114));
 				imagesetpixel($this->image_data, $x, $y, $bwpalette[$shade]);
@@ -298,7 +304,10 @@ class Image_Gd extends \Image_Driver {
 
 		call_user_func_array('image'.$filetype, $vars);
 		if ($this->config['persistence'] === false)
+		{
 			$this->reload();
+		}
+
 		return $this;
 	}
 
@@ -323,9 +332,11 @@ class Image_Gd extends \Image_Driver {
 		}
 
 		call_user_func_array('image'.$filetype, $vars);
-		
+
 		if ($this->config['persistence'] === false)
+		{
 			$this->reload();
+		}
 
 		return $this;
 	}
@@ -333,10 +344,10 @@ class Image_Gd extends \Image_Driver {
 	/**
 	 * Creates a new color usable by GD.
 	 *
-	 * @param  resource  $image  The image to create the color from
-	 * @param  string    $hex    The hex code of the color
-	 * @param  integer   $alpha  The alpha of the color, 0 (trans) to 100 (opaque)
-	 * @return integer   The color
+	 * @param   resource  $image  The image to create the color from
+	 * @param   string    $hex    The hex code of the color
+	 * @param   integer   $alpha  The alpha of the color, 0 (trans) to 100 (opaque)
+	 * @return  integer   The color
 	 */
 	protected function create_color(&$image, $hex, $alpha)
 	{
@@ -370,6 +381,7 @@ class Image_Gd extends \Image_Driver {
 			}
 			$alpha = 127 - floor($alpha * 1.27);
 		}
+
 		// Check if the transparency is allowed
 		return imagecolorallocatealpha($image, $red, $green, $blue, $alpha);
 	}
@@ -407,7 +419,9 @@ class Image_Gd extends \Image_Driver {
 			// Get the current transparent color if possible...
 			$transcolor = imagecolortransparent($image);
 			if ($transcolor > 0)
+			{
 				$color = $transcolor;
+			}
 			imagecolortransparent($image, $color);
 		}
 		// Set the blending mode to false, add the bgcolor, then switch it back.
@@ -510,6 +524,4 @@ class Image_Gd extends \Image_Driver {
 		imagecopymerge($image, $tmpimage, $x, $y, 0, 0, $wsizes->width, $wsizes->height, $alpha);
 		imagealphablending($image, true);
 	}
-
 }
-

@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -20,7 +20,8 @@ namespace Fuel\Core;
  * @author		Eric Barnes
  * @author		Harro "WanWizard" Verton
  */
-class Event {
+class Event
+{
 
 	/**
 	 * @var	array	An array of listeners
@@ -120,15 +121,11 @@ class Event {
 	 */
 	public static function shutdown()
 	{
-		if ( ! static::has_events('shutdown'))
+		if (static::has_events('shutdown'))
 		{
-			return;
+			// trigger the shutdown events
+			static::trigger('shutdown', '', 'none');
 		}
-		// shutdown events have to be executed in reverse order
-		static::$_events['shutdown'] = array_reverse(static::$_events['shutdown']);
-
-		// trigger the shutdown events
-		static::trigger('shutdown');
 	}
 
 	// --------------------------------------------------------------------
@@ -144,11 +141,11 @@ class Event {
 	 */
 	public static function has_events($event)
 	{
-		if (isset(static::$_events[$event]) AND count(static::$_events[$event]) > 0)
+		if (isset(static::$_events[$event]) and count(static::$_events[$event]) > 0)
 		{
-			return TRUE;
+			return true;
 		}
-		return FALSE;
+		return false;
 	}
 
 	// --------------------------------------------------------------------
@@ -191,7 +188,7 @@ class Event {
 				break;
 		}
 
-		return FALSE;
+		return false;
 	}
 }
 

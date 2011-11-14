@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -18,7 +18,8 @@ namespace Fuel\Core;
  * @group Core
  * @group Log
  */
-class Test_Log extends TestCase {
+class Test_Log extends TestCase
+{
 
 	public function __construct()
 	{

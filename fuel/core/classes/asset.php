@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -23,7 +23,8 @@ namespace Fuel\Core;
  * @package     Fuel
  * @subpackage  Core
  */
-class Asset {
+class Asset
+{
 
 	/**
 	 * @var  array  the asset paths to be searched
@@ -150,7 +151,7 @@ class Asset {
 			{
 				if ( ! ($file = static::find_file($filename, static::$_folders[$type])))
 				{
-					throw new \Fuel_Exception('Could not find asset: '.$filename);
+					throw new \FuelException('Could not find asset: '.$filename);
 				}
 
 				$raw or $file = static::$_asset_url.$file.(static::$_add_mtime ? '?'.filemtime($file) : '');

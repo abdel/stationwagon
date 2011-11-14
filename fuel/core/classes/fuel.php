@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -13,13 +13,28 @@
 namespace Fuel\Core;
 
 /**
+ * General Fuel Exception class
+ */
+class FuelException extends \Exception {}
+
+/**
+ * @deprecated  Keep until v1.2
+ */
+class Fuel_Exception extends \FuelException {}
+
+/**
  * The core of the framework.
  *
  * @package		Fuel
  * @subpackage	Core
- * @category	Core
  */
-class Fuel {
+class Fuel
+{
+
+	/**
+	 * @var  string  The version of Fuel
+	 */
+	const VERSION = '1.1-rc1';
 
 	/**
 	 * @var  string  constant used for when in testing mode
@@ -32,12 +47,6 @@ class Fuel {
 	const DEVELOPMENT = 'development';
 
 	/**
-	 * @var         string  constant used for when testing the code in a staging env.
-	 * @deprecated  This will be removed no earlier than v1.1.  Use STAGE instead.
-	 */
-	const QA = 'qa';
-
-	/**
 	 * @var  string  constant used for when in production
 	 */
 	const PRODUCTION = 'production';
@@ -47,18 +56,49 @@ class Fuel {
 	 */
 	const STAGE = 'stage';
 
+	/**
+	 * @var  int  No logging
+	 */
 	const L_NONE = 0;
+
+	/**
+	 * @var  int  Log errors only
+	 */
 	const L_ERROR = 1;
-	const L_DEBUG = 2;
-	const L_INFO = 3;
-	const L_ALL = 4;
 
-	const VERSION = '1.0';
+	/**
+	 * @var  int  Log warning massages and below
+	 */
+	const L_WARNING = 2;
 
+	/**
+	 * @var  int  Log debug massages and below
+	 */
+	const L_DEBUG = 3;
+
+	/**
+	 * @var  int  Log info massages and below
+	 */
+	const L_INFO = 4;
+
+	/**
+	 * @var  int  Log everything
+	 */
+	const L_ALL = 5;
+
+	/**
+	 * @var  bool  Whether Fuel has been initialized
+	 */
 	public static $initialized = false;
 
+	/**
+	 * @var  string  The Fuel environment
+	 */
 	public static $env = \Fuel::DEVELOPMENT;
 
+	/**
+	 * @var  bool  Whether to display the profiling information
+	 */
 	public static $profiling = false;
 
 	public static $locale = 'en_US';
@@ -82,6 +122,7 @@ class Fuel {
 	public static $paths_changed = false;
 
 	public static $is_cli = false;
+
 	public static $is_test = false;
 
 	public static $volatile_paths = array();
@@ -100,19 +141,20 @@ class Fuel {
 	 */
 	public static function init($config)
 	{
-		\Config::load($config);
-
 		if (static::$initialized)
 		{
-			throw new \Fuel_Exception("You can't initialize Fuel more than once.");
+			throw new \FuelException("You can't initialize Fuel more than once.");
 		}
 
-		register_shutdown_function('fuel_shutdown_handler');
-		set_exception_handler('fuel_exception_handler');
-		set_error_handler('fuel_error_handler');
+		static::$_paths = array(APPPATH, COREPATH);
+
+		// Is Fuel running on the command line?
+		static::$is_cli = (bool) defined('STDIN');
+
+		\Config::load($config);
 
 		// Start up output buffering
-		ob_start();
+		ob_start(\Config::get('ob_callback', null));
 
 		static::$profiling = \Config::get('profiling', false);
 
@@ -128,18 +170,17 @@ class Fuel {
 
 		if (static::$caching)
 		{
-			static::$path_cache = static::cache('Fuel::path_cache');
+			\Finder::instance()->read_cache('Fuel::paths');
 		}
 
 		// set a default timezone if one is defined
 		static::$timezone = \Config::get('default_timezone') ?: date_default_timezone_get();
 		date_default_timezone_set(static::$timezone);
 
-		// set the encoding and locale to use
 		static::$encoding = \Config::get('encoding', static::$encoding);
-		static::$locale = \Config::get('locale', static::$locale);
+		MBSTRING and mb_internal_encoding(static::$encoding);
 
-		static::$_paths = array(APPPATH, COREPATH);
+		static::$locale = \Config::get('locale', static::$locale);
 
 		if ( ! static::$is_cli)
 		{
@@ -147,14 +188,10 @@ class Fuel {
 			{
 				\Config::set('base_url', static::generate_base_url());
 			}
-
-			\Uri::detect();
 		}
 
 		// Run Input Filtering
 		\Security::clean_input();
-
-		static::$env = \Config::get('environment');
 
 		\Event::register('shutdown', 'Fuel::finish');
 
@@ -162,8 +199,11 @@ class Fuel {
 		foreach (\Config::get('always_load.packages', array()) as $package => $path)
 		{
 			is_string($package) and $path = array($package => $path);
-			static::add_package($path);
+			\Package::load($path);
 		}
+
+		// Always load classes, config & language set in always_load.php config
+		static::always_load();
 
 		// Load in the routes
 		\Config::load('routes', true);
@@ -171,9 +211,6 @@ class Fuel {
 
 		// Set  locale
 		static::$locale and setlocale(LC_ALL, static::$locale);
-
-		// Always load classes, config & language set in always_load.php config
-		static::always_load();
 
 		static::$initialized = true;
 
@@ -192,9 +229,9 @@ class Fuel {
 	 */
 	public static function finish()
 	{
-		if (static::$caching and static::$paths_changed === true)
+		if (static::$caching)
 		{
-			static::cache('Fuel::path_cache', static::$path_cache);
+			\Finder::instance()->write_cache('Fuel::paths');
 		}
 
 		if (static::$profiling)
@@ -228,87 +265,13 @@ class Fuel {
 	 * @param   boolean  if true return an array of all files found
 	 * @param   boolean  if false do not cache the result
 	 * @return  string   the path to the file
+	 * @deprecated  Replaced by Finder::search()
 	 */
 	public static function find_file($directory, $file, $ext = '.php', $multiple = false, $cache = true)
 	{
-		// absolute path requested?
-		if (strpos($file, '/') === 0 or strpos($file, ':') === 1)
-		{
-			return is_file($file) ? $file : false;
-		}
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a Finder::search() instead.', __METHOD__);
 
-		$cache_id = '';
-		$paths = array();
-
-		$found = $multiple ? array() : false;
-
-		// the file requested namespaced?
-		if($pos = strripos($file, '::'))
-		{
-			// get the namespace path
-			if ($path = \Autoloader::namespace_path('\\'.ucfirst(substr($file, 0, $pos))))
-			{
-				$cache_id .= substr($file, 0, $pos);
-
-				// and strip the classes directory as we need the module root
-				$paths = array(substr($path,0, -8));
-
-				// strip the namespace from the filename
-				$file = substr($file, $pos+2);
-			}
-		}
-
-		// if not found, use the cascading filesystem to find the file
-		if (empty($cache_id))
-		{
-			$paths = static::$_paths;
-
-			// get extra information of the active request
-			if (class_exists('Request', false) and $active = \Request::active())
-			{
-				$cache_id = $active->uri->uri;
-				$paths = array_merge($active->paths, $paths);
-			}
-		}
-
-		$paths = array_merge(static::$volatile_paths, $paths);
-
-		$path = $directory.DS.strtolower($file).$ext;
-
-		$cache_id = md5(($multiple ? 'M.' : 'S.').$cache_id);
-
-		if (static::$path_cache !== null and array_key_exists($cache_id.$path, static::$path_cache))
-		{
-			static::$volatile_paths = array();
-
-			return static::$path_cache[$cache_id.$path];
-		}
-
-		foreach ($paths as $dir)
-		{
-			$file_path = $dir.$path;
-
-			if (is_file($file_path))
-			{
-				if ( ! $multiple)
-				{
-					$found = $file_path;
-					break;
-				}
-
-				$found[] = $file_path;
-			}
-		}
-
-		if ( ! empty($found))
-		{
-			$cache and static::$path_cache[$cache_id.$path] = $found;
-			static::$paths_changed = true;
-		}
-
-		static::$volatile_paths = array();
-
-		return $found;
+		return \Finder::search($directory, $file, $ext, $multiple, $cache);
 	}
 
 	/**
@@ -319,23 +282,13 @@ class Fuel {
 	 * @param   string  The directory to look in
 	 * @param   string  The file filter
 	 * @return  array   the array of files
+	 * @deprecated  Replaced by Finder::instance()->list_files()
 	 */
 	public static function list_files($directory = null, $filter = '*.php')
 	{
-		$paths = static::$_paths;
-		// get the paths of the active request, and search them first
-		if (class_exists('Request', false) and $active = \Request::active())
-		{
-			$paths = array_merge($active->paths, $paths);
-		}
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a Finder::instance()->list_files() instead.', __METHOD__);
 
-		$found = array();
-		foreach ($paths as $path)
-		{
-			$found = array_merge(glob($path.$directory.'/'.$filter), $found);
-		}
-
-		return $found;
+		return Finder::instance()->list_files($directory, $filter);
 	}
 
 	/**
@@ -368,18 +321,9 @@ class Fuel {
 	 */
 	public static function add_path($path, $prefix = false)
 	{
-		if ($prefix)
-		{
-			// prefix the path to the paths array
-			array_unshift(static::$_paths, $path);
-		}
-		else
-		{
-			// find APPPATH index
-			$insert_at = array_search(APPPATH, static::$_paths) + 1;
-			// insert new path just behind the APPPATH
-			array_splice(static::$_paths, $insert_at, 0, $path);
-		}
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a Finder::instance()->add_path() instead.', __METHOD__);
+
+		return \Finder::instance()->add_path($path, ($prefix ? 1 : null));
 	}
 
 	/**
@@ -389,7 +333,9 @@ class Fuel {
 	 */
 	public static function get_paths()
 	{
-		return static::$_paths;
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a Finder::instance()->paths() instead.', __METHOD__);
+
+		return \Finder::instance()->paths();
 	}
 
 	/**
@@ -416,20 +362,8 @@ class Fuel {
 	 */
 	public static function add_package($package)
 	{
-		if ( ! is_array($package))
-		{
-			$package = array($package => PKGPATH.$package.DS);
-		}
-		foreach ($package as $name => $path)
-		{
-			if (array_key_exists($name, static::$packages))
-			{
-				continue;
-			}
-			static::add_path($path);
-			static::load($path.'bootstrap.php');
-			static::$packages[$name] = true;
-		}
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a Package::load() instead.', __METHOD__);
+		\Package::load($package);
 	}
 
 	/**
@@ -440,7 +374,8 @@ class Fuel {
 	 */
 	public static function remove_package($name)
 	{
-		unset(static::$packages[$name]);
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a Package::unload() instead.', __METHOD__);
+		\Package::unload($name);
 	}
 
 	/**
@@ -467,7 +402,7 @@ class Fuel {
 						$path = $mod_check_path;
 						$ns = '\\'.ucfirst($name);
 						\Autoloader::add_namespaces(array(
-							$ns	=> $path.'classes'.DS,
+							$ns  => $path.'classes'.DS,
 						), true);
 						break;
 					}
@@ -477,23 +412,23 @@ class Fuel {
 			// throw an exception if a non-existent module has been added
 			if ( ! isset($ns))
 			{
-				throw new \Fuel_Exception('Trying to add a non-existent module "'.$name.'"');
+				throw new \FuelException('Trying to add a non-existent module "'.$name.'"');
 			}
 		}
 		else
 		{
 			// strip the classes directory, we need the module root
-			$path = substr($path,0, -8);
+			$path = substr($path, 0, -8);
 		}
-		
+
 		return $path;
 	}
 
 	/**
 	 * Checks to see if a module exists or not.
 	 *
-	 * @param	string	the module name
-	 * @return	bool	whether it exists or not
+	 * @param   string  the module name
+	 * @return  bool    whether it exists or not
 	 */
 	public static function module_exists($module)
 	{
@@ -524,7 +459,7 @@ class Fuel {
 		$file = sha1($name).'.txt';
 
 		// Cache directories are split by keys to prevent filesystem overload
-		$dir = static::$cache_dir.DS.$file[0].$file[1].DS;
+		$dir = rtrim(static::$cache_dir, DS).DS.$file[0].$file[1].DS;
 
 		if ($lifetime === NULL)
 		{
@@ -563,10 +498,10 @@ class Fuel {
 		if ( ! is_dir($dir))
 		{
 			// Create the cache directory
-			mkdir($dir, 0777, TRUE);
+			mkdir($dir, octdec(\Config::get('file.chmod.folders', 0777)), true);
 
 			// Set permissions (must be manually set to fix umask issues)
-			chmod($dir, 0777);
+			chmod($dir, octdec(\Config::get('file.chmod.folders', 0777)));
 		}
 
 		// Force the data to be a string
@@ -618,9 +553,9 @@ class Fuel {
 		{
 			foreach ($array['classes'] as $class)
 			{
-				if ( ! class_exists(ucfirst($class)))
+				if ( ! class_exists($class = ucfirst($class)))
 				{
-					throw new \Fuel_Exception('Always load class does not exist.');
+					throw new \FuelException('Always load class does not exist. Unable to load: '.$class);
 				}
 			}
 		}
@@ -648,6 +583,19 @@ class Fuel {
 	}
 
 	/**
+	 * Takes a value and checks if it is a Closure or not, if it is it
+	 * will return the result of the closure, if not, it will simply return the
+	 * value.
+	 *
+	 * @param   mixed  $var  The value to get
+	 * @return  mixed
+	 */
+	public static function value($var)
+	{
+		return ($var instanceof \Closure) ? $var() : $var;
+	}
+
+	/**
 	 * Cleans a file path so that it does not contain absolute file paths.
 	 *
 	 * @param   string  the filepath
@@ -660,5 +608,3 @@ class Fuel {
 		return str_ireplace($search, $replace, $path);
 	}
 }
-
-

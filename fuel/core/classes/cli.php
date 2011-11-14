@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -22,7 +22,8 @@ namespace Fuel\Core;
  * @author		Phil Sturgeon
  * @link		http://fuelphp.com/docs/classes/cli.html
  */
-class Cli {
+class Cli
+{
 
 	public static $readline_support = false;
 
@@ -101,7 +102,7 @@ class Cli {
 	{
 		if ( ! isset(static::$args[$name]))
 		{
-			return $default;
+			return \Fuel::value($default);
 		}
 		return static::$args[$name];
 	}
@@ -333,7 +334,7 @@ class Cli {
 
 
 	/**
-	 * if oprerating system === windows
+	 * if operating system === windows
 	 */
  	public static function is_windows()
  	{ 
@@ -376,7 +377,7 @@ class Cli {
 	 * optionally a background color.
 	 *
 	 * @param	string	$text		the text to color
-	 * @param	atring	$foreground the foreground color
+	 * @param	string	$foreground the foreground color
 	 * @param	string	$background the background color
 	 * @return	string	the color coded string
 	 */
@@ -389,12 +390,12 @@ class Cli {
 		
 		if ( ! array_key_exists($foreground, static::$foreground_colors))
 		{
-			throw new \Fuel_Exception('Invalid CLI foreground color: '.$foreground);
+			throw new \FuelException('Invalid CLI foreground color: '.$foreground);
 		}
 
 		if ( $background !== null and ! array_key_exists($background, static::$background_colors))
 		{
-			throw new \Fuel_Exception('Invalid CLI background color: '.$background);
+			throw new \FuelException('Invalid CLI background color: '.$background);
 		}
 
 		$string = "\033[".static::$foreground_colors[$foreground]."m";

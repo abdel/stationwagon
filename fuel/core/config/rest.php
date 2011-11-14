@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -47,7 +47,7 @@ return array(
 	'auth' => '',
 
 	/*
-	| Array of usernames and passwords for login
+	| array of usernames and passwords for login
 	|
 	|	array('admin' => '1234')
 	|
