@@ -5,7 +5,7 @@ class Controller_Users extends Controller_Common {
 	public function action_index()
 	{
 		$this->template->title = 'Welcome';
-		$this->template->content = View::factory('users/index');
+		$this->template->content = View::forge('users/index');
 	}
 	
 	public function action_signup()
@@ -52,7 +52,7 @@ class Controller_Users extends Controller_Common {
         }
 		
 		$this->template->title = 'Sign Up';
-		$this->template->content = View::factory('users/signup')
+		$this->template->content = View::forge('users/signup')
 			->set('val', $val, false);
 	}
 	
@@ -91,7 +91,7 @@ class Controller_Users extends Controller_Common {
 		}
 		
 		$this->template->title = 'Login';
-		$this->template->content = View::factory('users/login')
+		$this->template->content = View::forge('users/login')
 			->set('val', $val, false);
 	}
 	
