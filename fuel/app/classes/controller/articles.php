@@ -33,7 +33,7 @@ class Controller_Articles extends Controller_Common {
 		));
 		
 		$this->template->title = 'Articles';
-		$this->template->content = View::factory('articles/index')
+		$this->template->content = View::forge('articles/index')
 			->set('total_articles', $total_articles)
 			->set('articles', $articles, false)
 			->set('show', $show);
@@ -77,7 +77,7 @@ class Controller_Articles extends Controller_Common {
 		}
 		
 		$this->template->title = 'Add Article';
-		$this->template->content = View::factory('articles/add')
+		$this->template->content = View::forge('articles/add')
 			->set('categories', Model_Category::find('all'), false)
 			->set('val', Validation::instance('add_article'), false);
 	}
@@ -116,7 +116,7 @@ class Controller_Articles extends Controller_Common {
 		}
 		
 		$this->template->title = 'Edit Article - '.$article->title;
-		$this->template->content = View::factory('articles/edit')
+		$this->template->content = View::forge('articles/edit')
 			->set('categories', Model_Category::find('all'), false)
 			->set('article', $article, false)
 			->set('val', Validation::instance('edit_article'), false);

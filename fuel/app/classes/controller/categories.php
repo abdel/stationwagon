@@ -27,7 +27,7 @@ class Controller_Categories extends Controller_Common {
 		));
 		
 		$this->template->title = 'Categories';
-		$this->template->content = View::factory('categories/index')
+		$this->template->content = View::forge('categories/index')
 			->set('total_categories', $total_categories)
 			->set('categories', $categories, false);
 	}
@@ -62,7 +62,7 @@ class Controller_Categories extends Controller_Common {
 		}
 		
 		$this->template->title = 'Add Category';
-		$this->template->content = View::factory('categories/add')
+		$this->template->content = View::forge('categories/add')
 			->set('val', $val, false);
 	}
 	
@@ -92,7 +92,7 @@ class Controller_Categories extends Controller_Common {
 		}
 		
 		$this->template->title = 'Edit Category - '.$category->name;
-		$this->template->content = View::factory('categories/edit')
+		$this->template->content = View::forge('categories/edit')
 			->set('val', $val, false)
 			->set('category', $category);
 	}
