@@ -18,7 +18,7 @@ You can download Stationwagon right away from the Downloads area.
 
 ## Cloning Stationwagon
 
-  git clone git://github.com/abdelm/stationwagon.git
+    git clone git://github.com/abdelm/stationwagon.git
 
 ## Installation
 
@@ -31,9 +31,9 @@ After cloning or downloading Stationwagon using the steps above, you will do a f
 
 If you want to use mod_rewrite, do the following changes in */fuel/app/config/config.php*:
 
-  'index_file' => false,
+    'index_file' => false,
 
-h2. Learning
+##. Learning
 
 Stationwagon is full of examples and is updated regularly with the latest Fuel changes.
 
@@ -44,7 +44,7 @@ There are a lot of examples on these classes:
 - Validation
 - and more!
 
-h2. Contribute
+##. Contribute
 
 If you are interested in adding more features to Stationwagon, fork the repository and make sure you make a pull request after you pushed changes to your Stationwagon fork.
 
