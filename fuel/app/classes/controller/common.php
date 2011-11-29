@@ -42,7 +42,7 @@ class Controller_Common extends Controller_Template {
 
 		// Set a HTTP 404 output header
 		$this->response->status = 404;
-		$this->template->content = View::factory('404', $data);
+		$this->template->content = View::forge('404', $data);
 	}
 }
 
