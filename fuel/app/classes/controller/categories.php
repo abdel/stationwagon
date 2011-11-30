@@ -35,7 +35,7 @@ class Controller_Categories extends Controller_Common {
 	public function action_add()
 	{
 		// Setup validation
-		$val = Validation::factory('add_category');
+		$val = Validation::forge('add_category');
 		$val->add('name', 'Name')->add_rule('required');
 		$val->add('description', 'Description');
 		
@@ -70,7 +70,7 @@ class Controller_Categories extends Controller_Common {
 	{
 		$category = Model_Category::find_by_id_and_user_id($id, $this->user_id);
 		
-		$val = Validation::factory('edit_category');
+		$val = Validation::forge('edit_category');
 		$val->add('name', 'Name')->add_rule('required');
 		$val->add('description', 'Description');
 		
