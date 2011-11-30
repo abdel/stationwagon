@@ -11,7 +11,7 @@ class Controller_Users extends Controller_Common {
 	public function action_signup()
     {
         // Setup Validation
-        $val = Validation::factory('signup_user');
+        $val = Validation::forge('signup_user');
 
         // Set validation rules
         $val->add('username', 'Username')
@@ -59,7 +59,7 @@ class Controller_Users extends Controller_Common {
 	public function action_login()
 	{
         // Setup Validation
-        $val = Validation::factory('login_user');
+        $val = Validation::forge('login_user');
 
         // Set validation rules
         $val->add('username', 'Username')

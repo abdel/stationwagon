@@ -22,7 +22,7 @@ class Model_Article extends Orm\Model {
 
     public static function validate($factory)
     {
-        $val = Validation::factory($factory);
+        $val = Validation::forge($factory);
 
         $val->add('category_id', 'Category');
 
