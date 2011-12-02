@@ -9,31 +9,31 @@ class Controller_Users extends Controller_Common {
 	}
 	
 	public function action_signup()
-    {
-        // Setup Validation
-        $val = Validation::forge('signup_user');
+	{
+		// Setup Validation
+		$val = Validation::forge('signup_user');
 
-        // Set validation rules
-        $val->add('username', 'Username')
-            ->add_rule('required')
-            ->add_rule('min_length', 3)
-            ->add_rule('max_length', 20);
+		// Set validation rules
+		$val->add('username', 'Username')
+			->add_rule('required')
+			->add_rule('min_length', 3)
+			->add_rule('max_length', 20);
 
-        $val->add('password', 'Password')
-            ->add_rule('required')
-            ->add_rule('min_length', 3)
-            ->add_rule('max_length', 20);
+		$val->add('password', 'Password')
+			->add_rule('required')
+			->add_rule('min_length', 3)
+			->add_rule('max_length', 20);
 
-        $val->add('email', 'Email Address')
-            ->add_rule('required')
-            ->add_rule('valid_email');
+		$val->add('email', 'Email Address')
+			->add_rule('required')
+			->add_rule('valid_email');
 
-        // Validate
+		// Validate
 		if ($val->run())
-        {
-            // Create user
-            if (Auth::instance()->create_user($val->validated('username'), 
-                $val->validated('password'), $val->validated('email'), 1))
+		{
+			// Create user
+			if (Auth::instance()->create_user($val->validated('username'), 
+				$val->validated('password'), $val->validated('email'), 1))
 			{
 				Session::set_flash('success', 'Thanks for registering!');
 				
@@ -41,15 +41,15 @@ class Controller_Users extends Controller_Common {
 			}
 			else
 			{
-                throw new Exception('An unexpected error occurred.'.
-                    ' Please try again.');
+				throw new Exception('An unexpected error occurred.'.
+					' Please try again.');
 			}
-        }
-        else
-        {
-            $val->set_message('valid_email', 'The field :label is not a valid'.
-                ' email address.');
-        }
+		}
+		else
+		{
+			$val->set_message('valid_email', 'The field :label is not a valid'.
+				' email address.');
+		}
 		
 		$this->template->title = 'Sign Up';
 		$this->template->content = View::forge('users/signup')
@@ -58,33 +58,33 @@ class Controller_Users extends Controller_Common {
 	
 	public function action_login()
 	{
-        // Setup Validation
-        $val = Validation::forge('login_user');
+		// Setup Validation
+		$val = Validation::forge('login_user');
 
-        // Set validation rules
-        $val->add('username', 'Username')
-            ->add_rule('required')
-            ->add_rule('min_length', 3)
-            ->add_rule('max_length', 20);
+		// Set validation rules
+		$val->add('username', 'Username')
+			->add_rule('required')
+			->add_rule('min_length', 3)
+			->add_rule('max_length', 20);
 
-        $val->add('password', 'Password')
-            ->add_rule('required')
-            ->add_rule('min_length', 3)
-            ->add_rule('max_length', 20);
+		$val->add('password', 'Password')
+			->add_rule('required')
+			->add_rule('min_length', 3)
+			->add_rule('max_length', 20);
 
-        // Validate
+		// Validate
 		if ($val->run())
-        {
-            // Authenticate user
-            if (Auth::instance()->login($val->validated('username'), 
-                $val->validated('password')))
+		{
+			// Authenticate user
+			if (Auth::instance()->login($val->validated('username'), 
+				$val->validated('password')))
 			{
 				Response::redirect('users');
 			}
 			else
 			{
-                Session::set_flash('error', 'Incorrect username or password.'.
-                    ' Please try again.');
+				Session::set_flash('error', 'Incorrect username or password.'.
+					' Please try again.');
 				
 				Response::redirect('users/login');
 			}

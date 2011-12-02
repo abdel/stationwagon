@@ -15,23 +15,23 @@
 <?php endforeach; ?>
 
 <div class="input select">
-    <?php echo Form::label('Category', 'category_id'); ?>
+	<?php echo Form::label('Category', 'category_id'); ?>
 	<?php echo Form::select('category_id', e($val->input('category_id')), $select_categories); ?>
 </div>
 
 <div class="input text required">
-    <?php echo Form::label('Title', 'title'); ?>
-    <?php echo Form::input('title', e($val->input('title')), array('size' => '30')); ?>
+	<?php echo Form::label('Title', 'title'); ?>
+	<?php echo Form::input('title', e($val->input('title')), array('size' => '30')); ?>
 </div>
 
 <div class="input textarea required">
-    <?php echo Form::label('Body', 'body'); ?>
-    <?php echo Form::textarea('body', e($val->input('body')), array('rows' => 4, 'cols' => 40)); ?>
+	<?php echo Form::label('Body', 'body'); ?>
+	<?php echo Form::textarea('body', e($val->input('body')), array('rows' => 4, 'cols' => 40)); ?>
 </div>
 
 <div class="input submit">
-    <?php echo Form::submit('add_article', 'Publish'); ?>
-    <?php echo Form::submit('save_draft', 'Save Draft'); ?>
+	<?php echo Form::submit('add_article', 'Publish'); ?>
+	<?php echo Form::submit('save_draft', 'Save Draft'); ?>
 </div>
 
 <?php echo Form::close(); ?>

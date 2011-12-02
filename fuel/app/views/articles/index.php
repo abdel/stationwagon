@@ -2,16 +2,16 @@
 <p>Manage your existing articles or add new ones.</p>
 
 <div class="options">
-    <div class="option">
-        <?php echo Html::anchor('articles/add', 'Add an Article'); ?>
-    </div>
-    <div class="option">
-        <?php echo Html::anchor('categories', 'View Categories'); ?>
-    </div>
+	<div class="option">
+		<?php echo Html::anchor('articles/add', 'Add an Article'); ?>
+	</div>
+	<div class="option">
+		<?php echo Html::anchor('categories', 'View Categories'); ?>
+	</div>
 </div>
 
 <div class="filters">
-    <strong>Show:</strong>
+	<strong>Show:</strong>
 	<?php echo Html::anchor('articles/index/published', 'Published'); ?>
 	&middot;
 	<?php echo Html::anchor('articles/index/drafts', 'Drafts'); ?>
@@ -34,20 +34,20 @@
 	<?php foreach ($articles as $article): ?>
 	<tr>
 		<td width="5%"><?php echo $article->id; ?></td>
-        <td><?php echo ($article->category_id != null) ? $article->category->name : 'Uncategorized'; ?></td>
-        <td><?php echo Str::truncate($article->title, 15); ?></td>
-        <td><?php echo Str::truncate($article->body, 25); ?></td>
-        <td width="7%">
+		<td><?php echo ($article->category_id != null) ? $article->category->name : 'Uncategorized'; ?></td>
+		<td><?php echo Str::truncate($article->title, 15); ?></td>
+		<td><?php echo Str::truncate($article->body, 25); ?></td>
+		<td width="7%">
 			<?php if ($article->published == 1): ?>
-            Published
-            <?php else: ?>
+			Published
+			<?php else: ?>
 			<?php echo Html::anchor('articles/publish/'.$article->id, 'Draft', array('title' => 'Click to Publish')); ?>
 			<?php endif; ?>
 		</td>
 		<td width="11%"><?php echo Date::Factory($article->created_at)->format("%d/%m/%Y"); ?></td>
 		<td width="11%">
 			<?php echo Html::anchor('articles/edit/'.$article->id, 'edit'); ?> /
-     		<?php echo Html::anchor('articles/delete/'.$article->id, 'delete'); ?>
+			<?php echo Html::anchor('articles/delete/'.$article->id, 'delete'); ?>
 		</td>
 	</tr>
 	<?php endforeach; ?>

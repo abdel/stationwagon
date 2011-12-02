@@ -15,22 +15,22 @@
 <?php endforeach; ?>
 
 <div class="input select">
-    <?php echo Form::label('Category', 'category_id'); ?>
+	<?php echo Form::label('Category', 'category_id'); ?>
 	<?php echo Form::select('category_id', e($article->category_id), $select_categories); ?>
 </div>
 
 <div class="input text required">
-    <?php echo Form::label('Title', 'title'); ?>
-    <?php echo Form::input('title', e($article->title), array('size' => 30)); ?>
+	<?php echo Form::label('Title', 'title'); ?>
+	<?php echo Form::input('title', e($article->title), array('size' => 30)); ?>
 </div>
 
 <div class="input textarea required">
-    <?php echo Form::label('Body', 'body'); ?>
-    <?php echo Form::textarea('body', e($article->body), array('cols' => 40, 'rows' => 4)); ?>
+	<?php echo Form::label('Body', 'body'); ?>
+	<?php echo Form::textarea('body', e($article->body), array('cols' => 40, 'rows' => 4)); ?>
 </div>
 
 <div class="input submit">
-    <?php echo Form::submit('edit_article', 'Edit Article'); ?>
+	<?php echo Form::submit('edit_article', 'Edit Article'); ?>
 </div>
 
 <?php echo Form::close(); ?>
