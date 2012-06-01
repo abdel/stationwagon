@@ -10,13 +10,13 @@
 <?php echo Form::open('categories/add'); ?>
 
 <div class="input text required">
-    <?php echo Form::label('Name', 'name'); ?>
-    <?php echo Form::input('name', $val->input('name'), array('size' => '30')); ?>
+	<?php echo Form::label('Name', 'name'); ?>
+	<?php echo Form::input('name', $val->input('name'), array('size' => '30')); ?>
 </div>
 
 <div class="input textarea">
-    <?php echo Form::label('Description', 'description'); ?>
-    <?php echo Form::textarea('description', $val->input('description'), array('rows' => 4, 'cols' => 40)); ?>
+	<?php echo Form::label('Description', 'description'); ?>
+	<?php echo Form::textarea('description', $val->input('description'), array('rows' => 4, 'cols' => 40)); ?>
 </div>
 
 <div class="input submit">

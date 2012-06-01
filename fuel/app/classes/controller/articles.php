@@ -3,8 +3,8 @@
 class Controller_Articles extends Controller_Common {
 
 	public function action_index($show = 'published')
-    {
-        $published = (($show === 'published') ? 1 : 0);
+	{
+		$published = (($show === 'published') ? 1 : 0);
 		
 		// Get total articles
 		$total_articles = Model_Article::find()
@@ -40,12 +40,12 @@ class Controller_Articles extends Controller_Common {
 	}
 	
 	public function action_add()
-    {
-        $val = Model_Article::validate('add_article');
+	{
+		$val = Model_Article::validate('add_article');
 				
 		if ($val->run())
-        {
-            $status = (Input::post('save_draft') ? 0 : 1);
+		{
+			$status = (Input::post('save_draft') ? 0 : 1);
 
 			if ( ! $val->input('category_id'))
 			{

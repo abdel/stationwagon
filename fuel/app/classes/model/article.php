@@ -18,22 +18,22 @@ class Model_Article extends Orm\Model {
 		'published',
 		'created_at',
 		'updated_at',
-    );
+	);
 
-    public static function validate($factory)
-    {
-        $val = Validation::forge($factory);
+	public static function validate($factory)
+	{
+		$val = Validation::forge($factory);
 
-        $val->add('category_id', 'Category');
+		$val->add('category_id', 'Category');
 
-        $val->add('title', 'Title')
-            ->add_rule('required');
+		$val->add('title', 'Title')
+			->add_rule('required');
 
-        $val->add('body', 'Body')
-            ->add_rule('required');
+		$val->add('body', 'Body')
+			->add_rule('required');
 
-        return $val;
-    }
+		return $val;
+	}
 }
 
 /* End of file article.php */
