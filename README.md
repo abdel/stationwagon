@@ -43,7 +43,7 @@ There are a lot of examples on these classes:
 - Auth
 - Pagination
 - Validation
-- and more!
+- and a lot more!
 
 h2. Contribute
 
