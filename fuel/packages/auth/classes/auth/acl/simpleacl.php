@@ -13,7 +13,8 @@
 namespace Auth;
 
 
-class Auth_Acl_SimpleAcl extends \Auth_Acl_Driver {
+class Auth_Acl_SimpleAcl extends \Auth_Acl_Driver
+{
 
 	protected static $_valid_roles = array();
 

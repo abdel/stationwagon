@@ -11,7 +11,8 @@
 
 namespace Fuel\Core;
 
-class Database_Query_Builder_Select extends \Database_Query_Builder_Where {
+class Database_Query_Builder_Select extends \Database_Query_Builder_Where
+{
 
 	// SELECT ...
 	protected $_select = array();
@@ -52,7 +53,7 @@ class Database_Query_Builder_Select extends \Database_Query_Builder_Where {
 		}
 
 		// Start the query with no actual SQL statement
-		parent::__construct(\DB::SELECT, '');
+		parent::__construct('', \DB::SELECT);
 	}
 
 	/**
@@ -166,9 +167,9 @@ class Database_Query_Builder_Select extends \Database_Query_Builder_Where {
 	 * @param   mixed   column value
 	 * @return  $this
 	 */
-	public function having($column, $op, $value = NULL)
+	public function having($column, $op = null, $value = NULL)
 	{
-		return $this->and_having($column, $op, $value);
+		return call_user_func_array(array($this, 'and_having'), func_get_args());
 	}
 
 	/**
@@ -179,8 +180,22 @@ class Database_Query_Builder_Select extends \Database_Query_Builder_Where {
 	 * @param   mixed   column value
 	 * @return  $this
 	 */
-	public function and_having($column, $op, $value = NULL)
+	public function and_having($column, $op = null, $value = null)
 	{
+		if($column instanceof \Closure)
+		{
+			$this->and_having_open();
+			$column($this);
+			$this->and_having_close();
+			return $this;
+		}
+
+		if(func_num_args() === 2)
+		{
+			$value = $op;
+			$op = '=';
+		}
+
 		$this->_having[] = array('AND' => array($column, $op, $value));
 
 		return $this;
@@ -194,8 +209,22 @@ class Database_Query_Builder_Select extends \Database_Query_Builder_Where {
 	 * @param   mixed   column value
 	 * @return  $this
 	 */
-	public function or_having($column, $op, $value = NULL)
+	public function or_having($column, $op = null, $value = null)
 	{
+		if($column instanceof \Closure)
+		{
+			$this->or_having_open();
+			$column($this);
+			$this->or_having_close();
+			return $this;
+		}
+
+		if(func_num_args() === 2)
+		{
+			$value = $op;
+			$op = '=';
+		}
+
 		$this->_having[] = array('OR' => array($column, $op, $value));
 
 		return $this;
@@ -285,11 +314,17 @@ class Database_Query_Builder_Select extends \Database_Query_Builder_Where {
 	/**
 	 * Compile the SQL query and return it.
 	 *
-	 * @param   object  Database instance
+	 * @param   mixed  Database instance or instance name
 	 * @return  string
 	 */
-	public function compile(\Database_Connection$db)
+	public function compile($db = null)
 	{
+		if ( ! $db instanceof \Database_Connection)
+		{
+			// Get the database instance
+			$db = \Database_Connection::instance($db);
+		}
+		
 		// Callback to quote identifiers
 		$quote_ident = array($db, 'quote_identifier');
 

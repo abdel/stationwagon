@@ -6,16 +6,45 @@
  * @version		1.0
  * @author		Fuel Development Team
  * @license		MIT License
- * @copyright	2010 - 2011 Fuel Development Team
+ * @copyright	2010 - 2012 Fuel Development Team
  * @link		http://fuelphp.com
  */
 
 namespace Orm;
 
 // Exception to throw when validation failed
-class ValidationFailed extends \Fuel_Exception {}
+class ValidationFailed extends \FuelException
+{
+	protected $fieldset;
 
-class Observer_Validation extends Observer {
+	/**
+	 * Overridden \FuelException construct to add a Fieldset instance into the exception
+	 *
+	 * @param string
+	 * @param int
+	 * @param Exception
+	 * @param Fieldset
+	 */
+	public function __construct($message = null, $code = 0, \Exception $previous = null, \Fieldset $fieldset = null)
+	{
+		parent::__construct($message, $code, $previous);
+
+		$this->fieldset = $fieldset;
+	}
+
+	/**
+	 * Gets the Fieldset from this exception
+	 *
+	 * @return Fieldset
+	 */
+	public function get_fieldset()
+	{
+		return $this->fieldset;
+	}
+}
+
+class Observer_Validation extends Observer
+{
 
 	/**
 	 * Set a Model's properties as fields on a Fieldset, which will be created with the Model's
@@ -35,7 +64,7 @@ class Observer_Validation extends Observer {
 			$fieldset = \Fieldset::instance($class);
 			if ( ! $fieldset)
 			{
-				$fieldset = \Fieldset::factory($class);
+				$fieldset = \Fieldset::forge($class);
 			}
 		}
 
@@ -46,17 +75,32 @@ class Observer_Validation extends Observer {
 		}
 		$_generated[$class][] = $fieldset;
 
-		$fieldset->validation()->add_callable($obj);
-
+		$primary_keys = is_object($obj) ? $obj->primary_key() : $class::primary_key();
 		$properties = is_object($obj) ? $obj->properties() : $class::properties();
 		foreach ($properties as $p => $settings)
 		{
-			$field = $fieldset->add($p, ! empty($settings['label']) ? $settings['label'] : $p);
-			if (empty($settings['validation']))
+			if (\Arr::get($settings, 'skip', in_array($p, $primary_keys)))
 			{
 				continue;
 			}
-			else
+
+			if (isset($settings['form']['options']))
+			{
+				foreach ($settings['form']['options'] as $key => $value)
+				{
+					is_array($value) or $settings['form']['options'][$key] = \Lang::get($value) ?: $value;
+				}
+			}
+
+			// field attributes can be passed in form key
+			$attributes = isset($settings['form']) ? $settings['form'] : array();
+			// label is either set in property setting, as part of form attributes or defaults to fieldname
+			$label = isset($settings['label']) ? $settings['label'] : (isset($attributes['label']) ? $attributes['label'] : $p);
+			$label = \Lang::get($label) ?: $label;
+
+			// create the field and add validation rules
+			$field = $fieldset->add($p, $label, $attributes);
+			if ( ! empty($settings['validation']))
 			{
 				foreach ($settings['validation'] as $rule => $args)
 				{
@@ -96,17 +140,25 @@ class Observer_Validation extends Observer {
 	 */
 	public function validate(Model $obj)
 	{
-		$val = static::set_fields($obj)->validation();
+		$fieldset = static::set_fields($obj);
+		$val = $fieldset->validation();
+
+		// only allow partial validation on updates, specify the fields for updates to allow null
+		$allow_partial = $obj->is_new() ? false : array();
 
 		$input = array();
 		foreach (array_keys($obj->properties()) as $p)
 		{
-			! in_array($p, $obj->primary_key()) and $input[$p] = $obj->{$p};
+			if ( ! in_array($p, $obj->primary_key()) and $obj->is_changed($p))
+			{
+				$input[$p] = $obj->{$p};
+				is_array($allow_partial) and $allow_partial[] = $p;
+			}
 		}
 
-		if ($val->run($input) === false)
+		if ( ! empty($input) and $val->run($input, $allow_partial, array($obj)) === false)
 		{
-			throw new ValidationFailed($val->show_errors());
+			throw new ValidationFailed($val->show_errors(), 0, null, $fieldset);
 		}
 		else
 		{
@@ -117,5 +169,3 @@ class Observer_Validation extends Observer {
 		}
 	}
 }
-
-// End of file validation.php

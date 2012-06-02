@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Fuel PHP Framework</title>
+	<title>FuelPHP Framework</title>
 	<style type="text/css">
 		* { margin: 0; padding: 0; }
 		body { background-color: #EEE; font-family: sans-serif; font-size: 16px; line-height: 20px; margin: 40px; }
@@ -52,7 +52,7 @@
 				$debug_lines = \Debug::file_lines($trace['file'], $trace['line']);
 		?>
 			<li>
-				<a href="#" onclick="javascript:fuel_toggle('backtrace_<?php echo $id; ?>');return false;"><?php echo Fuel::clean_path($trace['file']).' @ line '.$trace['line']; ?></a>
+				<a href="#" onclick="javascript:fuel_toggle('backtrace_<?php echo $id; ?>');return false;"><?php echo \Fuel::clean_path($trace['file']).' @ line '.$trace['line']; ?></a>
 				<div id="backtrace_<?php echo $id; ?>" class="backtrace_block">
 <pre class="fuel_debug_source"><?php foreach ($debug_lines as $line_num => $line_content): ?>
 <span<?php echo ($line_num == $trace['line']) ? ' class="fuel_line fuel_current_line"' : ' class="fuel_line"'; ?>><span class="fuel_line_number"><?php echo str_pad($line_num, (strlen(count($debug_lines))), ' ', STR_PAD_LEFT); ?></span><span class="fuel_line_content"><?php echo $line_content . PHP_EOL; ?>
@@ -86,11 +86,11 @@
 
 <?php if ( ! empty($contents)): ?>
 		<h2>Prior Contents (<a href="#" onclick="javascript:fuel_toggle('prior_contents');return false;">show</a>)</h2>
-		<pre id="prior_contents" class="fuel_debug_source" style="display: none;""><?php echo e($contents); ?></pre>
+		<pre id="prior_contents" class="fuel_debug_source" style="display: none;"><?php echo e($contents); ?></pre>
 <?php endif; ?>
 
 		<p class="footer">
-			<a href="http://fuelphp.com">Fuel PHP</a> is released under the MIT license.
+			<a href="http://fuelphp.com">FuelPHP</a> is released under the MIT license.
 		</p>
 	</div>
 </body>

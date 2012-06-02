@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -47,12 +47,21 @@ return array(
 	'auth' => '',
 
 	/*
-	| Array of usernames and passwords for login
+	| array of usernames and passwords for login
 	|
 	|	array('admin' => '1234')
 	|
 	*/
 	'valid_logins' => array('admin' => '1234'),
+
+	/*
+	| Ignore HTTP_ACCEPT
+	|
+	| A lot of work can go into detecting incoming data,
+	| disabling this will speed up your requests if you do not use a ACCEPT header.
+	|
+	*/
+	'ignore_http_accept' => false,
 
 );
 

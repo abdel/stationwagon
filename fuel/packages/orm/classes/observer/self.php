@@ -6,14 +6,14 @@
  * @version		1.0
  * @author		Fuel Development Team
  * @license		MIT License
- * @copyright	2010 - 2011 Fuel Development Team
+ * @copyright	2010 - 2012 Fuel Development Team
  * @link		http://fuelphp.com
  */
 
 namespace Orm;
 
-class Observer_Self {
-
+class Observer_Self
+{
 	public static function orm_notify(Model $instance, $event)
 	{
 		if (method_exists($instance, $method = '_event_'.$event))
@@ -22,5 +22,3 @@ class Observer_Self {
 		}
 	}
 }
-
-// End of file self.php

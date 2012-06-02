@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -20,10 +20,11 @@ namespace Fuel\Core;
  * @package    Fuel
  * @category   Core
  * @author     Fuel Development Team
- * @copyright  2010 - 2011 Fuel Development Team
- * @link       http://fuelphp.com/docs/classes/format.html
+ * @copyright  2010 - 2012 Fuel Development Team
+ * @link       http://docs.fuelphp.com/classes/format.html
  */
-class Format {
+class Format
+{
 
 	/**
 	 * @var  array|mixed  input to convert
@@ -33,19 +34,19 @@ class Format {
 	/**
 	 * Returns an instance of the Format object.
 	 *
-	 *     echo Format::factory(array('foo' => 'bar'))->to_xml();
+	 *     echo Format::forge(array('foo' => 'bar'))->to_xml();
 	 *
 	 * @param   mixed  general date to be converted
 	 * @param   string  data format the file was provided in
-	 * @return  Factory
+	 * @return  Format
 	 */
-	public static function factory($data = null, $from_type = null)
+	public static function forge($data = null, $from_type = null)
 	{
 		return new static($data, $from_type);
 	}
 
 	/**
-	 * Do not use this directly, call factory()
+	 * Do not use this directly, call forge()
 	 */
 	public function __construct($data = null, $from_type = null)
 	{
@@ -59,7 +60,7 @@ class Format {
 
 			else
 			{
-				throw new Fuel_Exception('Format class does not support conversion from "' . $from_type . '".');
+				throw new \FuelException('Format class does not support conversion from "' . $from_type . '".');
 			}
 		}
 
@@ -84,6 +85,16 @@ class Format {
 		}
 
 		$array = array();
+
+		if (is_object($data) and ! $data instanceof \Iterator)
+		{
+			$data = get_object_vars($data);
+		}
+
+		if (empty($data))
+		{
+			return array();
+		}
 
 		foreach ($data as $key => $value)
 		{
@@ -127,7 +138,7 @@ class Format {
 		}
 
 		// Force it to be something useful
-		if ( ! is_array($data) AND ! is_object($data))
+		if ( ! is_array($data) and ! is_object($data))
 		{
 			$data = (array) $data;
 		}
@@ -138,14 +149,14 @@ class Format {
 			if (is_numeric($key))
 			{
 				// make string key...
-				$key = (Inflector::singularize($basenode) != $basenode) ? Inflector::singularize($basenode) : 'item';
+				$key = (\Inflector::singularize($basenode) != $basenode) ? \Inflector::singularize($basenode) : 'item';
 			}
 
 			// replace anything not alpha numeric
 			$key = preg_replace('/[^a-z_\-0-9]/i', '', $key);
 
 			// if there is another array found recrusively call this function
-			if (is_array($value) || is_object($value))
+			if (is_array($value) or is_object($value))
 			{
 				$node = $structure->addChild($key);
 
@@ -177,7 +188,7 @@ class Format {
 	 */
 	public function to_csv($data = null)
 	{
-		if ($data == null)
+		if ($data === null)
 		{
 			$data = $this->_data;
 		}
@@ -185,7 +196,14 @@ class Format {
 		// Multi-dimentional array
 		if (is_array($data) and isset($data[0]))
 		{
-			$headings = array_keys($data[0]);
+			if (\Arr::is_assoc($data[0]))
+			{
+				$headings = array_keys($data[0]);
+			}
+			else
+			{
+				$headings = array_shift($data);
+			}
 		}
 
 		// Single array
@@ -208,9 +226,10 @@ class Format {
 	 * To JSON conversion
 	 *
 	 * @param   mixed  $data
+	 * @param   bool   wether to make the json pretty
 	 * @return  string
 	 */
-	public function to_json($data = null)
+	public function to_json($data = null, $pretty = false)
 	{
 		if ($data == null)
 		{
@@ -220,7 +239,22 @@ class Format {
 		// To allow exporting ArrayAccess objects like Orm\Model instances they need to be
 		// converted to an array first
 		$data = (is_array($data) or is_object($data)) ? $this->to_array($data) : $data;
-		return json_encode($data);
+		return $pretty ? static::pretty_json($data) : json_encode($data);
+	}
+
+	/**
+	 * To JSONP conversion
+	 *
+	 * @param   mixed  $data
+	 * @param   bool   wether to make the json pretty
+	 * @return  string
+	 */
+	public function to_jsonp($data = null, $pretty = false)
+	{
+		 $callback = \Input::param('callback');
+		 is_null($callback) and $callback = 'response';
+
+		 return $callback.'('.$this->to_json($data, $pretty).')';
 	}
 
 	/**
@@ -252,7 +286,7 @@ class Format {
 			$data = $this->_data;
 		}
 
-		return var_export($data, TRUE);
+		return var_export($data, true);
 	}
 
 	/**
@@ -284,7 +318,16 @@ class Format {
 	 */
 	protected function _from_xml($string)
 	{
-		return $string ? (array) simplexml_load_string($string, 'SimpleXMLElement', LIBXML_NOCDATA) : array();
+		$_arr = is_string($string) ? simplexml_load_string($string, 'SimpleXMLElement', LIBXML_NOCDATA) : $string;
+		$arr = array();
+
+		// Convert all objects SimpleXMLElement to array recursively
+		foreach ((array)$_arr as $key => $val)
+		{
+			$arr[$key] = (is_array($val) or is_object($val)) ? $this->_from_xml($val) : $val;
+		}
+
+		return $arr;
 	}
 
 	/**
@@ -317,9 +360,13 @@ class Format {
 		$rows = explode("\n", trim($string));
 
 		// TODO: This means any headers with , will be split, but this is less likley thay a value containing it
-		$headings = array_map(function($value) {
+		$headings = array_map(
+			function($value)
+			{
 				return trim($value, '"');
-			}, explode(',', array_shift($rows)));
+			},
+			explode(',', array_shift($rows))
+		);
 
 		$join_row = null;
 
@@ -358,8 +405,12 @@ class Format {
 				}
 			}
 
-			// The substr removes " from start and end
-			$data_fields = explode('","', trim($row, '"'));
+			// If present, remove the " from start and end
+			substr($row, 0, 1) === '"' and $row = substr($row,1);
+			substr($row, -1) === '"' and $row = substr($row,0,-1);
+
+			// Extract the fields from the row
+			$data_fields = explode('","', $row);
 
 			if (count($data_fields) == count($headings))
 			{
@@ -393,5 +444,89 @@ class Format {
 		return unserialize(trim($string));
 	}
 
+	/**
+	 * Makes json pretty the json output.
+	 * Barrowed from http://www.php.net/manual/en/function.json-encode.php#80339
+	 *
+	 * @param   string  $json  json encoded array
+	 * @return  string|false  pretty json output or false when the input was not valid
+	 */
+	protected static function pretty_json($data)
+	{
+		$json = json_encode($data);
+		if ( ! $json)
+		{
+			return false;
+		}
+
+		$tab = "\t";
+		$newline = "\n";
+		$new_json = "";
+		$indent_level = 0;
+		$in_string = false;
+		$len = strlen($json);
+
+		for ($c = 0; $c < $len; $c++)
+		{
+			$char = $json[$c];
+			switch($char)
+			{
+				case '{':
+				case '[':
+					if ( ! $in_string)
+					{
+						$new_json .= $char.$newline.str_repeat($tab, $indent_level+1);
+						$indent_level++;
+					}
+					else
+					{
+						$new_json .= $char;
+					}
+					break;
+				case '}':
+				case ']':
+					if ( ! $in_string)
+					{
+						$indent_level--;
+						$new_json .= $newline.str_repeat($tab, $indent_level).$char;
+					}
+					else
+					{
+						$new_json .= $char;
+					}
+					break;
+				case ',':
+					if ( ! $in_string)
+					{
+						$new_json .= ','.$newline.str_repeat($tab, $indent_level);
+					}
+					else
+					{
+						$new_json .= $char;
+					}
+					break;
+				case ':':
+					if ( ! $in_string)
+					{
+						$new_json .= ': ';
+					}
+					else
+					{
+						$new_json .= $char;
+					}
+					break;
+				case '"':
+					if ($c > 0 and $json[$c-1] !== '\\')
+					{
+						$in_string = ! $in_string;
+					}
+				default:
+					$new_json .= $char;
+					break;
+			}
+		}
+
+		return $new_json;
+	}
 }
 

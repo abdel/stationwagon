@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -18,7 +18,8 @@ namespace Fuel\Core;
  * @group Core
  * @group Agent
  */
-class Test_Agent extends TestCase {
+class Test_Agent extends TestCase
+{
 
 	/**
 	 * need to setup a fake browser environment
@@ -37,7 +38,7 @@ class Test_Agent extends TestCase {
 	 */
 	public function test_browser()
  	{
-		$expected = "Firefox 3.6";
+		$expected = "Firefox";
 		$output = Agent::browser();
 		$this->assertEquals($expected, $output);
 	}
@@ -71,7 +72,7 @@ class Test_Agent extends TestCase {
  	{
 		return array(
 			array(
-				'Browser','Firefox 3.6',
+				'Browser','Firefox',
 			),
 			array(
 				'Version',3.6,
@@ -172,13 +173,13 @@ class Test_Agent extends TestCase {
 	}
 
 	/**
-	 * Tests Agent::is_mobile()
+	 * Tests Agent::is_mobiledevice()
 	 *
 	 * @test
 	 */
-	public function test_is_mobile()
+	public function test_is_mobiledevice()
  	{
-		$output = Agent::is_mobile();
+		$output = Agent::is_mobiledevice();
 		$this->assertFalse($output);
 	}
 

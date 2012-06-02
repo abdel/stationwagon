@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package		Fuel
  * @version		1.0
@@ -13,7 +13,8 @@ namespace Fuel\Core;
 
 
 
-class Pagination {
+class Pagination
+{
 
 	/**
 	 * @var	integer	The current page
@@ -34,23 +35,29 @@ class Pagination {
 	 * @var	integer	The number of total pages
 	 */
 	public static $total_pages = 0;
-	
+
 	/**
 	 * @var array The HTML for the display
 	 */
 	public static $template = array(
-		'wrapper_start'  => '<div class="pagination"> ',
-		'wrapper_end'    => ' </div>',
-		'page_start'     => '<span class="page-links"> ',
-		'page_end'       => ' </span>',
-		'previous_start' => '<span class="previous"> ',
-		'previous_end'   => ' </span>',
-		'previous_mark'  => '&laquo; ',
-		'next_start'     => '<span class="next"> ',
-		'next_end'       => ' </span>',
-		'next_mark'      => ' &raquo;',
-		'active_start'   => '<span class="active"> ',
-		'active_end'     => ' </span>',
+		'wrapper_start'           => '<div class="pagination"> ',
+		'wrapper_end'             => ' </div>',
+		'page_start'              => '<span class="page-links"> ',
+		'page_end'                => ' </span>',
+		'previous_start'          => '<span class="previous"> ',
+		'previous_end'            => ' </span>',
+		'previous_inactive_start' => ' <span class="previous-inactive">',
+		'previous_inactive_end'   => ' </span>',
+		'previous_mark'           => '&laquo; ',
+		'next_start'              => '<span class="next"> ',
+		'next_end'                => ' </span>',
+		'next_inactive_start'     => ' <span class="next-inactive">',
+		'next_inactive_end'       => ' </span>',
+		'next_mark'               => ' &raquo;',
+		'active_start'            => '<span class="active"> ',
+		'active_end'              => ' </span>',
+		'regular_start'           => '',
+		'regular_end'             => '',
 	);
 
 	/**
@@ -83,6 +90,7 @@ class Pagination {
 	 */
 	public static function _init()
 	{
+		\Config::load('pagination', true);
 		$config = \Config::get('pagination', array());
 
 		static::set_config($config);
@@ -128,7 +136,7 @@ class Pagination {
 	{
 		static::$total_pages = ceil(static::$total_items / static::$per_page) ?: 1;
 
-		static::$current_page = (int) \URI::segment(static::$uri_segment);
+		static::$current_page = (static::$total_items > 0 && static::$current_page > 1) ? static::$current_page : (int) \URI::segment(static::$uri_segment);
 
 		if (static::$current_page > static::$total_pages)
 		{
@@ -161,9 +169,9 @@ class Pagination {
 		\Lang::load('pagination', true);
 
 		$pagination  = static::$template['wrapper_start'];
-		$pagination .= static::prev_link(\Lang::line('pagination.previous'));
+		$pagination .= static::prev_link(\Lang::get('pagination.previous'));
 		$pagination .= static::page_links();
-		$pagination .= static::next_link(\Lang::line('pagination.next'));
+		$pagination .= static::next_link(\Lang::get('pagination.next'));
 		$pagination .= static::$template['wrapper_end'];
 
 		return $pagination;
@@ -201,7 +209,7 @@ class Pagination {
 			else
 			{
 				$url = ($i == 1) ? '' : '/'.$i;
-				$pagination .= \Html::anchor(rtrim(static::$pagination_url, '/').$url, $i);
+				$pagination .= static::$template['regular_start'].\Html::anchor(rtrim(static::$pagination_url, '/').$url, $i).static::$template['regular_end'];
 			}
 		}
 
@@ -226,12 +234,12 @@ class Pagination {
 
 		if (static::$current_page == static::$total_pages)
 		{
-			return $value.static::$template['next_mark'];
+			return static::$template['next_inactive_start'].$value.static::$template['next_mark'].static::$template['next_inactive_end'];
 		}
 		else
 		{
 			$next_page = static::$current_page + 1;
-			return \Html::anchor(rtrim(static::$pagination_url, '/').'/'.$next_page, $value.static::$template['next_mark']);
+			return static::$template['next_start'].\Html::anchor(rtrim(static::$pagination_url, '/').'/'.$next_page, $value.static::$template['next_mark']).static::$template['next_end'];
 		}
 	}
 
@@ -253,13 +261,13 @@ class Pagination {
 
 		if (static::$current_page == 1)
 		{
-			return static::$template['previous_mark'].$value;
+			return static::$template['previous_inactive_start'].static::$template['previous_mark'].$value.static::$template['previous_inactive_end'];
 		}
 		else
 		{
 			$previous_page = static::$current_page - 1;
 			$previous_page = ($previous_page == 1) ? '' : '/'.$previous_page;
-			return \Html::anchor(rtrim(static::$pagination_url, '/').$previous_page, static::$template['previous_mark'].$value);
+			return static::$template['previous_start'].\Html::anchor(rtrim(static::$pagination_url, '/').$previous_page, static::$template['previous_mark'].$value).static::$template['previous_end'];
 		}
 	}
 }

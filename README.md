@@ -1,7 +1,7 @@
 # Stationwagon
 
-* Version: 1.2
-* Fuel Version: 1.0
+* Version: 1.3
+* Fuel Version: 1.2-RC1
 * [Stationwagon on FuelPHP Forums](http://fuelphp.com/forums/topics/view/326)
 
 ## Description
@@ -19,7 +19,7 @@ You can download Stationwagon right away from the Downloads area.
 ## Cloning Stationwagon
 
   git clone git://github.com/abdelm/stationwagon.git
-	
+
 ## Installation
 
 After cloning or downloading Stationwagon using the steps above, you will do a few things to get Stationwagon up and running:
@@ -33,14 +33,14 @@ After cloning or downloading Stationwagon using the steps above, you will do a f
 If you want to use mod_rewrite, do the following changes in */fuel/app/config/config.php*:
 
   'index_file' => false,
-	
+
 h2. Learning
 
 Stationwagon is full of examples and is updated regularly with the latest Fuel changes.
 
 There are a lot of examples on these classes:
 - Orm
-- Auth 
+- Auth
 - Pagination
 - Validation
 - and more!

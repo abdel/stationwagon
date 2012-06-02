@@ -1,23 +1,16 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
 namespace Fuel\Core;
-
-
-/**
- * When this is thrown and not caught, the Errors class will call \Request::show_404()
- */
-class Request404Exception extends \Fuel_Exception {}
-
 
 /**
  * The Request class is used to create and manage new and existing requests.  There
@@ -26,13 +19,14 @@ class Request404Exception extends \Fuel_Exception {}
  *
  * Example Usage:
  *
- *     $request = Request::factory('foo/bar')->execute();
+ *     $request = Request::forge('foo/bar')->execute();
  *     echo $request->response();
  *
  * @package     Fuel
  * @subpackage  Core
  */
-class Request {
+class Request
+{
 
 	/**
 	 * Holds the main request instance
@@ -55,26 +49,29 @@ class Request {
 	 *
 	 * Usage:
 	 *
-	 *     Request::factory('hello/world');
+	 *     Request::forge('hello/world');
 	 *
 	 * @param   string   The URI of the request
-	 * @param   bool     Whether to use the routes to determine the Controller and Action
+	 * @param   mixed    Internal: whether to use the routes; external: driver type or array with settings (driver key must be set)
+	 * @param   string   request method
 	 * @return  Request  The new request object
 	 */
-	public static function factory($uri = null, $route = true)
+	public static function forge($uri = null, $options = true, $method = null)
 	{
-		logger(Fuel::L_INFO, 'Creating a new Request with URI = "'.$uri.'"', __METHOD__);
+		is_bool($options) and $options = array('route' => $options);
+		is_string($options) and $options = array('driver' => $options);
 
-		$request = new static($uri, $route);
-		$request->parent = static::$active;
-		static::$active->children[] = $request;
-
-		static::$active = $request;
-
-		if ( ! static::$main)
+		if ( ! empty($options['driver']))
 		{
-			logger(Fuel::L_INFO, 'Setting main Request', __METHOD__);
-			static::$main = $request;
+			$class = \Inflector::words_to_upper('Request_'.$options['driver']);
+			return $class::forge($uri, $options, $method);
+		}
+
+		$request = new static($uri, isset($options['route']) ? $options['route'] : true, $method);
+		if (static::$active)
+		{
+			$request->parent = static::$active;
+			static::$active->children[] = $request;
 		}
 
 		return $request;
@@ -82,6 +79,7 @@ class Request {
 
 	/**
 	 * Returns the main request instance (the one from the browser or CLI).
+	 * This is the first executed Request, not necessarily the root parent of the current request.
 	 *
 	 * Usage:
 	 *
@@ -91,8 +89,6 @@ class Request {
 	 */
 	public static function main()
 	{
-		logger(Fuel::L_INFO, 'Called', __METHOD__);
-
 		return static::$main;
 	}
 
@@ -103,80 +99,35 @@ class Request {
 	 *
 	 *     Request::active();
 	 *
+	 * @param   Request|null|false  overwrite current request before returning, false prevents overwrite
 	 * @return  Request
 	 */
-	public static function active()
+	public static function active($request = false)
 	{
-		class_exists('Log', false) and logger(Fuel::L_INFO, 'Called', __METHOD__);
+		if ($request !== false)
+		{
+			static::$active = $request;
+		}
 
 		return static::$active;
 	}
 
 	/**
-	 * Shows a 404.  Checks to see if a 404_override route is set, if not show
-	 * a default 404.
+	 * Returns the current request is an HMVC request
 	 *
 	 * Usage:
 	 *
-	 *     Request::show_404();
+	 *     if (Request::is_hmvc())
+	 *     {
+	 *         // Do something special...
+	 *         return;
+	 *     }
 	 *
-	 * @param   bool         Whether to return the 404 output or just output and exit
-	 * @return  void|string  Void if $return is false, the output if $return is true
+	 * @return  bool
 	 */
-	public static function show_404($return = false)
+	public static function is_hmvc()
 	{
-		logger(Fuel::L_INFO, 'Called', __METHOD__);
-
-		// This ensures that show_404 doesn't recurse indefinately
-		static $call_count = 0;
-		$call_count++;
-
-		if ($call_count == 1)
-		{
-			// first call, route the 404 route
-			$route_request = true;
-		}
-		elseif ($call_count == 2)
-		{
-			// second call, try the 404 route without routing
-			$route_request = false;
-		}
-		else
-		{
-			// third call, there's something seriously wrong now
-			exit('It appears your _404_ route is incorrect.  Multiple Recursion has happened.');
-		}
-
-		if (\Config::get('routes._404_') === null)
-		{
-			$response = new \Response(\View::factory('404'), 404);
-
-			if ($return)
-			{
-				return $response;
-			}
-
-			\Event::shutdown();
-
-			$response->send(true);
-		}
-		else
-		{
-			$request = \Request::factory(\Config::get('routes._404_'), $route_request)->execute();
-
-			if ($return)
-			{
-				return $request->response;
-			}
-
-			\Event::shutdown();
-
-			$request->response->send(true);
-		}
-
-		\Fuel::finish();
-
-		exit;
+		return static::active() !== static::main();
 	}
 
 	/**
@@ -192,10 +143,7 @@ class Request {
 	public static function reset_request()
 	{
 		// Let's make the previous Request active since we are done executing this one.
-		if (static::$active->parent())
-		{
-			static::$active = static::$active->parent();
-		}
+		static::$active = static::$active->parent();
 	}
 
 
@@ -219,6 +167,11 @@ class Request {
 	 * @var  Route
 	 */
 	public $route = null;
+
+	/**
+	 * @var  string  $method  request method
+	 */
+	protected $method = null;
 
 	/**
 	 * The current module
@@ -300,47 +253,44 @@ class Request {
 	 *
 	 * @param   string  the uri string
 	 * @param   bool    whether or not to route the URI
+	 * @param   string  request method
 	 * @return  void
 	 */
-	public function __construct($uri, $route = true)
+	public function __construct($uri, $route = true, $method = null)
 	{
 		$this->uri = new \Uri($uri);
+		$this->method = $method;
+
+		logger(\Fuel::L_INFO, 'Creating a new Request with URI = "'.$uri.'"', __METHOD__);
 
 		// check if a module was requested
-		if (count($this->uri->segments) and $modpath = \Fuel::module_exists($this->uri->segments[0]))
+		if (count($this->uri->segments()) and $module_path = \Module::exists($this->uri->get_segment(0)))
 		{
 			// check if the module has routes
-			if (file_exists($modpath .= 'config/routes.php'))
+			if (is_file($module_path .= 'config/routes.php'))
 			{
+				$module = $this->uri->segments[0];
+
 				// load and add the module routes
-				$modroutes = \Config::load(\Fuel::load($modpath), $this->uri->segments[0] . '_routes');
-				foreach ($modroutes as $name => $modroute)
+				$module_routes = \Fuel::load($module_path);
+
+				$prepped_routes = array();
+				foreach($module_routes as $name => $_route)
 				{
-					switch ($name)
+					if ($name === '_root_')
 					{
-						case '_root_':
-							// map the root to the module default controller/method
-							$name = $this->uri->segments[0];
-						break;
-
-						case '_404_':
-							// do not touch the 404 route
-						break;
-
-						default:
-							// prefix the route with the module name if it isn't done yet
-							if (strpos($name, $this->uri->segments[0].'/') !== 0 and $name != $this->uri->segments[0])
-							{
-								$name = $this->uri->segments[0].'/'.$name;
-							}
-						break;
+						$name = $module;
+					}
+					elseif (strpos($name, $module.'/') !== 0 and $name != $module and $name !== '_404_')
+					{
+						$name = $module.'/'.$name;
 					}
 
-					\Config::set('routes.' . $name, $modroute);
-				}
+					$prepped_routes[$name] = $_route;
+				};
 
 				// update the loaded list of routes
-				\Router::add(\Config::get('routes'));
+				\Router::add($prepped_routes, null, true);
 			}
 		}
 
@@ -351,18 +301,16 @@ class Request {
 			return;
 		}
 
-		if ($this->route->module !== null)
-		{
-			$this->module = $this->route->module;
-			\Fuel::add_module($this->module);
-			$this->add_path(\Fuel::module_exists($this->module));
-		}
-
-		$this->directory = $this->route->directory;
+		$this->module = $this->route->module;
 		$this->controller = $this->route->controller;
 		$this->action = $this->route->action;
 		$this->method_params = $this->route->method_params;
 		$this->named_params = $this->route->named_params;
+
+		if ($this->route->module !== null)
+		{
+			$this->add_path(\Module::exists($this->module));
+		}
 	}
 
 	/**
@@ -370,81 +318,152 @@ class Request {
 	 *
 	 * Usage:
 	 *
-	 *     $request = Request::factory('hello/world')->execute();
+	 *     $request = Request::forge('hello/world')->execute();
 	 *
 	 * @param  array|null  $method_params  An array of parameters to pass to the method being executed
 	 * @return  Request  This request object
 	 */
 	public function execute($method_params = null)
 	{
-		logger(Fuel::L_INFO, 'Called', __METHOD__);
+		if (\Fuel::$profiling)
+		{
+			\Profiler::mark(__METHOD__.' Start');
+		}
+
+		logger(\Fuel::L_INFO, 'Called', __METHOD__);
+
+		// Make the current request active
+		static::$active = $this;
+
+		// First request called is also the main request
+		if ( ! static::$main)
+		{
+			logger(\Fuel::L_INFO, 'Setting main Request', __METHOD__);
+			static::$main = $this;
+		}
 
 		if ( ! $this->route)
 		{
 			static::reset_request();
-			throw new \Request404Exception();
+			throw new \HttpNotFoundException();
 		}
 
-		$controller_prefix = '\\'.($this->module ? ucfirst($this->module).'\\' : '').'Controller_';
-		$method_prefix = 'action_';
+		try
+		{
+			if ($this->route->callable !== null)
+			{
+				$response = call_user_func_array($this->route->callable, array($this));
+			}
+			else
+			{
+				$method_prefix = 'action_';
+				$class = $this->controller;
 
-		$class = $controller_prefix.($this->directory ? ucfirst($this->directory).'_' : '').ucfirst($this->controller);
+				// Allow override of method params from execute
+				if (is_array($method_params))
+				{
+					$this->method_params = array_merge($this->method_params, $method_params);
+				}
 
-		// If the class doesn't exist then 404
-		if ( ! class_exists($class))
+				// If the class doesn't exist then 404
+				if ( ! class_exists($class))
+				{
+					throw new \HttpNotFoundException();
+				}
+
+				// Load the controller using reflection
+				$class = new \ReflectionClass($class);
+
+				if ($class->isAbstract())
+				{
+					throw new \HttpNotFoundException();
+				}
+
+				// Create a new instance of the controller
+				$this->controller_instance = $class->newInstance($this, new \Response);
+
+				$this->action = $this->action ?: ($class->hasProperty('default_action') ? $class->getProperty('default_action')->getValue($this->controller_instance) : 'index');
+				$method = $method_prefix.$this->action;
+
+				// Allow to do in controller routing if method router(action, params) exists
+				if ($class->hasMethod('router'))
+				{
+					$method = 'router';
+					$this->method_params = array($this->action, $this->method_params);
+				}
+
+				if ($class->hasMethod($method))
+				{
+					$action = $class->getMethod($method);
+
+					if ( ! $action->isPublic())
+					{
+						throw new \HttpNotFoundException();
+					}
+
+					$class->hasMethod('before') and $class->getMethod('before')->invoke($this->controller_instance);
+
+					$response = $action->invokeArgs($this->controller_instance, $this->method_params);
+
+					$class->hasMethod('after') and $response = $class->getMethod('after')->invoke($this->controller_instance, $response);
+				}
+				else
+				{
+					throw new \HttpNotFoundException();
+				}
+			}
+		}
+		catch (\Exception $e)
 		{
 			static::reset_request();
-			throw new \Request404Exception();
+			throw $e;
 		}
 
-		logger(Fuel::L_INFO, 'Loading controller '.$class, __METHOD__);
-		$this->controller_instance = $controller = new $class($this, new \Response);
 
-		$this->action = $this->action ?: (property_exists($controller, 'default_action') ? $controller->default_action : 'index');
-		$method = $method_prefix.$this->action;
-
-		// Allow override of method params from execute
-		if (is_array($method_params))
+		// Get the controller's output
+		if (is_null($response))
 		{
-			$this->method_params = array_merge($this->method_params, $method_params);
+			throw new \FuelException('The controller action called or it\'s after() method must return a Response object.');
 		}
-
-		// Allow to do in controller routing if method router(action, params) exists
-		if (method_exists($controller, 'router'))
+		elseif ($response instanceof \Response)
 		{
-			$method = 'router';
-			$this->method_params = array($this->action, $this->method_params);
-		}
-
-		if (is_callable(array($controller, $method)))
-		{
-			// Call the before method if it exists
-			if (method_exists($controller, 'before'))
-			{
-				logger(Fuel::L_INFO, 'Calling '.$class.'::before', __METHOD__);
-				$controller->before();
-			}
-
-			logger(Fuel::L_INFO, 'Calling '.$class.'::'.$method, __METHOD__);
-			call_user_func_array(array($controller, $method), $this->method_params);
-
-			// Call the after method if it exists
-			if (method_exists($controller, 'after'))
-			{
-				logger(Fuel::L_INFO, 'Calling '.$class.'::after', __METHOD__);
-				$controller->after();
-			}
-
-			// Get the controller's output
-			$this->response =& $controller->response;
+			$this->response = $response;
 		}
 		else
 		{
-			throw new \Request404Exception();
+			$this->response = \Response::forge($response, 200);
 		}
 
 		static::reset_request();
+
+		if (\Fuel::$profiling)
+		{
+			\Profiler::mark(__METHOD__.' End');
+		}
+
 		return $this;
+	}
+
+	/**
+	 * Sets the request method.
+	 *
+	 * @param   string  $method  request method
+	 * @return  object  current instance
+	 */
+	public function set_method($method)
+	{
+		$this->method = strtoupper($method);
+		return $this;
+	}
+
+	/**
+	 * Returns the request method. Defaults to \Input::method().
+	 *
+	 * @return  string  request method
+	 */
+	public function get_method()
+	{
+		return $this->method ?: \Input::method();
 	}
 
 	/**
@@ -452,7 +471,7 @@ class Request {
 	 *
 	 * Usage:
 	 *
-	 *     $response = Request::factory('foo/bar')->execute()->response();
+	 *     $response = Request::forge('foo/bar')->execute()->response();
 	 *
 	 * @return  Response  This Request's Response object
 	 */
@@ -482,7 +501,7 @@ class Request {
 	}
 
 	/**
-	 * Add to paths which are used by Fuel::find_file()
+	 * Add to paths which are used by Finder::search()
 	 *
 	 * @param   string  the new path
 	 * @param   bool    whether to add to the front or the back of the array
@@ -513,11 +532,38 @@ class Request {
 	}
 
 	/**
+	 * Gets a specific named parameter
+	 *
+	 * @param   string  $param    Name of the parameter
+	 * @param   mixed   $default  Default value
+	 * @return  mixed
+	 */
+	public function param($param, $default = null)
+	{
+		if ( ! isset($this->named_params[$param]))
+		{
+			return \Fuel::value($default);
+		}
+
+		return $this->named_params[$param];
+	}
+
+	/**
+	 * Gets all of the named parameters
+	 *
+	 * @return  array
+	 */
+	public function params()
+	{
+		return $this->named_params;
+	}
+
+	/**
 	 * PHP magic function returns the Output of the request.
 	 *
 	 * Usage:
 	 *
-	 *     $request = Request::factory('hello/world')->execute();
+	 *     $request = Request::forge('hello/world')->execute();
 	 *     echo $request;
 	 *
 	 * @return  string  the response
@@ -527,5 +573,3 @@ class Request {
 		return (string) $this->response;
 	}
 }
-
-

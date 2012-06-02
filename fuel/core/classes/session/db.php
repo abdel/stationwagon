@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -16,7 +16,8 @@ namespace Fuel\Core;
 
 // --------------------------------------------------------------------
 
-class Session_Db extends \Session_Driver {
+class Session_Db extends \Session_Driver
+{
 
 	/*
 	 * @var	session database result object
@@ -48,9 +49,9 @@ class Session_Db extends \Session_Driver {
 	 * create a new session
 	 *
 	 * @access	public
-	 * @return	void
+	 * @return	Fuel\Core\Session_Db
 	 */
-	public function create()
+	public function create($payload = '')
 	{
 		// create a new session
 		$this->keys['session_id']	= $this->_new_session_id();
@@ -59,13 +60,15 @@ class Session_Db extends \Session_Driver {
 		$this->keys['user_agent']	= \Input::user_agent();
 		$this->keys['created'] 		= $this->time->get_timestamp();
 		$this->keys['updated'] 		= $this->keys['created'];
-		$this->keys['payload'] 		= '';
+		$this->keys['payload'] 		= $payload;
 
 		// create the session record
 		$result = \DB::insert($this->config['table'], array_keys($this->keys))->values($this->keys)->execute($this->config['database']);
 
 		// and set the session cookie
 		$this->_set_cookie();
+
+		return $this;
 	}
 
 	// --------------------------------------------------------------------
@@ -75,17 +78,19 @@ class Session_Db extends \Session_Driver {
 	 *
 	 * @access	public
 	 * @param	boolean, set to true if we want to force a new session to be created
-	 * @return	void
+	 * @return	Fuel\Core\Session_Driver
 	 */
 	public function read($force = false)
 	{
 		// get the session cookie
 		$cookie = $this->_get_cookie();
 
-		// if no session cookie was present, create it
+		// if no session cookie was present, initialize a new session
 		if ($cookie === false or $force)
 		{
-			$this->create();
+			$this->data = array();
+			$this->keys = array();
+			return $this;
 		}
 
 		// read the session record
@@ -104,20 +109,21 @@ class Session_Db extends \Session_Driver {
 			// record found?
 			if ($this->record->count())
 			{
+				// previous id used, correctly set session id so it wont be overwritten with previous id.
+				$this->keys['session_id'] = $this->record->get('session_id');
 				$payload = $this->_unserialize($this->record->get('payload'));
 			}
 			else
 			{
 				// cookie present, but session record missing. force creation of a new session
-				$this->read(true);
-				return;
+				return $this->read(true);
 			}
 		}
 
 		if (isset($payload[0])) $this->data = $payload[0];
 		if (isset($payload[1])) $this->flash = $payload[1];
 
-		parent::read();
+		return parent::read();
 	}
 
 	// --------------------------------------------------------------------
@@ -126,34 +132,43 @@ class Session_Db extends \Session_Driver {
 	 * write the current session
 	 *
 	 * @access	public
-	 * @return	void
+	 * @return	Fuel\Core\Session_Db
 	 */
 	public function write()
 	{
 		// do we have something to write?
-		if ( ! empty($this->keys) and ! empty($this->record))
+		if ( ! empty($this->keys) or ! empty($this->data) or ! empty($this->flash))
 		{
 			parent::write();
 
-			// rotate the session id if needed
-			$this->rotate(false);
-
-			// create the session record, and add the session payload
-			$session = $this->keys;
-			$session['payload'] = $this->_serialize(array($this->data, $this->flash));
-
-			// update the database
-			$result = \DB::update($this->config['table'])->set($session)->where('session_id', '=', $this->record->get('session_id'))->execute($this->config['database']);
-
-			// update went well?
-			if ($result !== false)
+			// do we need to create a new session?
+			if (is_null($this->record) or empty($this->keys))
 			{
-				// then update the cookie
-				$this->_set_cookie();
+				$payload = $this->_serialize(array($this->data, $this->flash));
+				$this->create($payload);
 			}
 			else
 			{
-				logger(Fuel::L_ERROR, 'Session update failed, session record could not be found. Concurrency issue?');
+				// rotate the session id if needed
+				$this->rotate(false);
+
+				// create the session record, and add the session payload
+				$session = $this->keys;
+				$session['payload'] = $this->_serialize(array($this->data, $this->flash));
+
+				// update the database
+				$result = \DB::update($this->config['table'])->set($session)->where('session_id', '=', $this->record->get('session_id'))->execute($this->config['database']);
+
+				// update went well?
+				if ($result !== false)
+				{
+					// then update the cookie
+					$this->_set_cookie();
+				}
+				else
+				{
+					logger(\Fuel::L_ERROR, 'Session update failed, session record could not be found. Concurrency issue?');
+				}
 			}
 
 			// do some garbage collection
@@ -163,6 +178,8 @@ class Session_Db extends \Session_Driver {
 				$result = \DB::delete($this->config['table'])->where('updated', '<', $expired)->execute($this->config['database']);
 			}
 		}
+
+		return $this;
 	}
 
 	// --------------------------------------------------------------------
@@ -171,7 +188,7 @@ class Session_Db extends \Session_Driver {
 	 * destroy the current session
 	 *
 	 * @access	public
-	 * @return	void
+	 * @return	Fuel\Core\Session_Db
 	 */
 	public function destroy()
 	{
@@ -185,6 +202,8 @@ class Session_Db extends \Session_Driver {
 		// reset the stored session data
 		$this->record = null;
 		$this->keys = $this->flash = $this->data = array();
+
+		return $this;
 	}
 
 	// --------------------------------------------------------------------
@@ -208,7 +227,7 @@ class Session_Db extends \Session_Driver {
 				switch ($name)
 				{
 					case 'cookie_name':
-						if ( empty($item) OR ! is_string($item))
+						if ( empty($item) or ! is_string($item))
 						{
 							$item = 'fueldid';
 						}
@@ -216,28 +235,28 @@ class Session_Db extends \Session_Driver {
 
 					case 'database':
 						// do we have a database?
-						if ( empty($item) OR ! is_string($item))
+						if ( empty($item) or ! is_string($item))
 						{
 							\Config::load('db', true);
 							$item = \Config::get('db.active', false);
 						}
 						if ($item === false)
 						{
-							throw new \Fuel_Exception('You have specify a database to use database backed sessions.');
+							throw new \FuelException('You have specify a database to use database backed sessions.');
 						}
 					break;
 
 					case 'table':
 						// and a table name?
-						if ( empty($item) OR ! is_string($item))
+						if ( empty($item) or ! is_string($item))
 						{
-							throw new \Fuel_Exception('You have specify a database table name to use database backed sessions.');
+							throw new \FuelException('You have specify a database table name to use database backed sessions.');
 						}
 					break;
 
 					case 'gc_probability':
 						// do we have a path?
-						if ( ! is_numeric($item) OR $item < 0 OR $item > 100)
+						if ( ! is_numeric($item) or $item < 0 or $item > 100)
 						{
 							// default value: 5%
 							$item = 5;

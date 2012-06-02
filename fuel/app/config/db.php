@@ -1,85 +1,33 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Base Database Config.
  *
- * @package    Fuel
- * @version    1.0
- * @author     Fuel Development Team
- * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
- * @link       http://fuelphp.com
+ * See the individual environment DB configs for specific config information.
  */
 
 return array(
-	'active' => Config::get('environment'),
+	'active' => 'default',
 
-	Fuel::DEVELOPMENT => array(
-		'type'			=> 'mysql',
-		'connection'	=> array(
-			'hostname'   => 'localhost',
-			'database'   => 'stationwagon',
-			'username'   => 'root',
-			'password'   => '',
+	/**
+	 * Base config, just need to set the DSN, username and password in env. config.
+	 */
+	'default' => array(
+		'type'        => 'pdo',
+		'connection'  => array(
 			'persistent' => false,
 		),
+		'identifier'   => '`',
 		'table_prefix' => '',
 		'charset'      => 'utf8',
-		'caching'      => false,
-		'profiling'    => false,
-	),
-
-	Fuel::PRODUCTION => array(
-		'type'			=> 'mysql',
-		'connection'	=> array(
-			'hostname'   => 'localhost',
-			'database'   => 'stationwagon',
-			'username'   => 'root',
-			'password'   => '',
-			'persistent' => false,
-		),
-		'table_prefix' => '',
-		'charset'      => 'utf8',
-		'caching'      => false,
-		'profiling'    => false,
-	),
-
-	Fuel::TEST => array(
-		'type'			=> 'mysql',
-		'connection'	=> array(
-			'hostname'   => 'localhost',
-			'database'   => 'stationwagon',
-			'username'   => 'root',
-			'password'   => '',
-			'persistent' => false,
-		),
-		'table_prefix' => '',
-		'charset'      => 'utf8',
-		'caching'      => false,
-		'profiling'    => false,
-	),
-
-	Fuel::STAGE => array(
-		'type'			=> 'mysql',
-		'connection'	=> array(
-			'hostname'   => 'localhost',
-			'database'   => 'stationwagon',
-			'username'   => 'root',
-			'password'   => '',
-			'persistent' => false,
-		),
-		'table_prefix' => '',
-		'charset'      => 'utf8',
-		'caching'      => false,
+		'enable_cache' => true,
 		'profiling'    => false,
 	),
 
 	'redis' => array(
 		'default' => array(
-			'hostname'	=> '127.0.0.1',
-			'port'		=> 6379,
+			'hostname'  => '127.0.0.1',
+			'port'      => 6379,
 		)
 	),
 
 );
-
-/* End of file db.php */

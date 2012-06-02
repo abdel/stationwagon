@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -17,11 +17,12 @@ namespace Fuel\Core;
  *
  * A base controller for easily creating templated output.
  *
- * @package		Fuel
- * @category	Core
- * @author		Fuel Development Team
+ * @package   Fuel
+ * @category  Core
+ * @author    Fuel Development Team
  */
-abstract class Controller_Template extends \Controller {
+abstract class Controller_Template extends \Controller
+{
 
 	/**
 	* @var string page template
@@ -29,34 +30,41 @@ abstract class Controller_Template extends \Controller {
 	public $template = 'template';
 
 	/**
-	* @var boolean auto render template
-	**/
-	public $auto_render = true;
-
-	// Load the template and create the $this->template object
-	public function before($data = null)
+	 * Load the template and create the $this->template object
+	 */
+	public function before()
 	{
-		if ($this->auto_render === true)
+		if ( ! empty($this->template) and is_string($this->template))
 		{
 			// Load the template
-			$this->template = \View::factory($this->template);
-			
-			// Set the data to the template if provided
-			$data and $this->template->set_global($data);
+			$this->template = \View::forge($this->template);
 		}
 
 		return parent::before();
 	}
 
-	// After contorller method has run output the template
-	public function after()
+	/**
+	 * After controller method has run output the template
+	 *
+	 * @param  Response  $response
+	 */
+	public function after($response)
 	{
-		if ($this->auto_render === true)
+		// If nothing was returned default to the template
+		if (empty($response))
 		{
-			$this->response->body($this->template);
+			$response = $this->template;
 		}
 
-		return parent::after();
+		// If the response isn't a Response object, embed in the available one for BC
+		// @deprecated  can be removed when $this->response is removed
+		if ( ! $response instanceof Response)
+		{
+			$this->response->body = $response;
+			$response = $this->response;
+		}
+
+		return parent::after($response);
 	}
 
 }

@@ -6,7 +6,7 @@
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -22,7 +22,7 @@ namespace Oil;
  */
 class Package
 {
-	protected static $protected = array('auth', 'activerecord', 'oil', 'orm');
+	protected static $protected = array('oil');
 
 	protected static $git = 'git';
 
@@ -50,7 +50,7 @@ class Package
 		{
 			$zip_url = 'http://' . rtrim($source, '/').'/fuel-'.$package.'/zipball/'.$version;
 
-			if ($fp = fopen($zip_url, 'r'))
+			if ($fp = @fopen($zip_url, 'r'))
 			{
 				// We don't actually need this, just checking the file is there
 				fclose($fp);
@@ -68,7 +68,7 @@ class Package
 				{
 					static::_clone_package_repo($source, $package, $version);
 				}
-				
+
 				exit;
 			}
 		}

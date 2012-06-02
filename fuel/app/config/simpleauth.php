@@ -25,36 +25,37 @@ return array(
 	 * Roles as name => array(location => rights)
 	 */
 	'roles' => array(
-        '#'          => array(
-            'users' => array(
-                'index',
-            ),
-        ),
-        'guest'      => array(
-            'users'  => array(
-                'index',
-                'signup',
-                'login',
-            ),
-        ),
-        'user'       => array(
-            'users'  => array( 
-                'logout',
-            ),
-            'articles'   => array(
-                'index',
-                'add',
-                'edit',
-                'delete',
-            ),
-            'categories' => array(
-                'index',
-                'add',
-                'edit',
-                'delete',
-            ),
-        ),
-        'banned'     => false,
+		'#'          => array(
+			'Controller_Users' => array(
+				'index',
+			),
+		),
+		'guest'      => array(
+			'Controller_Users'  => array(
+				'index',
+				'signup',
+				'login',
+			),
+		),
+		'user'       => array(
+			'Controller_Users'  => array(
+				'logout',
+			),
+			'Controller_Articles'   => array(
+				'index',
+				'add',
+				'edit',
+				'publish',
+				'delete',
+			),
+			'Controller_Categories' => array(
+				'index',
+				'add',
+				'edit',
+				'delete',
+			),
+		),
+		'banned'     => false,
 		'super'      => true,
 	),
 

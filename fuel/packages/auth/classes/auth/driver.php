@@ -13,7 +13,8 @@
 namespace Auth;
 
 
-abstract class Auth_Driver {
+abstract class Auth_Driver
+{
 
 	/**
 	 * @var	Auth_Driver
@@ -27,7 +28,7 @@ abstract class Auth_Driver {
 	 */
 	// protected static $_instances = array();
 
-	public static function factory(Array $config = array())
+	public static function forge(array $config = array())
 	{
 		throw new \AuthException('Driver must have a factory method extension.');
 	}

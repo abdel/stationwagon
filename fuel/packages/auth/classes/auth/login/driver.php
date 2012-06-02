@@ -12,7 +12,8 @@
 
 namespace Auth;
 
-abstract class Auth_Login_Driver extends \Auth_Driver {
+abstract class Auth_Login_Driver extends \Auth_Driver
+{
 
 	/**
 	 * @var  Auth_Driver
@@ -24,7 +25,7 @@ abstract class Auth_Login_Driver extends \Auth_Driver {
 	 */
 	protected static $_instances = array();
 
-	public static function factory(Array $config = array())
+	public static function forge(array $config = array())
 	{
 		// default driver id to driver name when not given
 		! array_key_exists('id', $config) && $config['id'] = $config['driver'];
@@ -42,7 +43,7 @@ abstract class Auth_Login_Driver extends \Auth_Driver {
 					? array('driver' => $custom)
 					: array_merge($custom, array('driver' => $d));
 				$class = 'Auth_'.ucfirst($type).'_Driver';
-				$class::factory($custom);
+				$class::forge($custom);
 			}
 		}
 
@@ -82,7 +83,7 @@ abstract class Auth_Login_Driver extends \Auth_Driver {
 	/**
 	 * Return user info in an array, always includes email & screen_name
 	 * Additional fields can be requested in the first param or set in config,
-	 * all additional fields must have their own method "get_user_" + fieldname
+	 * all additional fields must have their own method "get_" + fieldname
 	 *
 	 * @param   array  additional fields
 	 * @return  array
@@ -198,6 +199,13 @@ abstract class Auth_Login_Driver extends \Auth_Driver {
 	 * @return  bool
 	 */
 	abstract protected function perform_check();
+
+	/**
+	 * Perform the actual login check
+	 *
+	 * @return  bool
+	 */
+	abstract public function validate_user();
 
 	/**
 	 * Login method

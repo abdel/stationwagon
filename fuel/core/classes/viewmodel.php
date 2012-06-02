@@ -1,20 +1,17 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
 namespace Fuel\Core;
 
-
-
-// ------------------------------------------------------------------------
 
 /**
  * ViewModel
@@ -24,8 +21,8 @@ namespace Fuel\Core;
  * @category    Core
  * @author      Jelmer Schreuder
  */
-abstract class ViewModel {
-
+abstract class ViewModel
+{
 	/**
 	 * Factory for fetching the ViewModel
 	 *
@@ -33,19 +30,20 @@ abstract class ViewModel {
 	 * @param   string  Method to execute
 	 * @return  ViewModel
 	 */
-	public static function factory($viewmodel, $method = 'view')
+	public static function forge($viewmodel, $method = 'view', $auto_filter = null)
 	{
-		$class = ucfirst(\Request::active()->module).'\\View_'.ucfirst(str_replace(DS, '_', $viewmodel));
+		$namespace = \Request::active() ? ucfirst(\Request::active()->module) : '';
+		$class = $namespace.'\\View_'.ucfirst(str_replace(array('/', DS), '_', $viewmodel));
 
 		if ( ! class_exists($class))
 		{
 			if ( ! class_exists($class = $viewmodel))
 			{
-				throw new \OutOfBoundsException('ViewModel "View_'.ucfirst(str_replace(DS, '_', $viewmodel)).'" could not be found.');
+				throw new \OutOfBoundsException('ViewModel "View_'.ucfirst(str_replace(array('/', DS), '_', $viewmodel)).'" could not be found.');
 			}
 		}
 
-		return new $class($method);
+		return new $class($method, $auto_filter);
 	}
 
 	/**
@@ -56,60 +54,55 @@ abstract class ViewModel {
 	/**
 	 * @var  string|View  view name, after instantiation a View object
 	 */
-	protected $_template;
+	protected $_view;
 
 	/**
-	 * @var  bool  whether or not to use auto encoding
+	 * @var  bool  whether or not to use auto filtering
 	 */
-	protected $_auto_encode;
+	protected $_auto_filter;
 
-	protected function __construct($method)
+	/**
+	 * @var  Request  active request during ViewModel creation for proper context
+	 */
+	protected $_active_request;
+
+	protected function __construct($method, $auto_filter = null)
 	{
-		if (empty($this->_template))
+		$this->_auto_filter = $auto_filter;
+		class_exists('Request', false) and $this->_active_request = \Request::active();
+
+		if (empty($this->_view))
 		{
+			// Take the class name and guess the view name
 			$class = get_class($this);
-			$this->_template = strtolower(str_replace('_', '/', preg_replace('#^([a-z0-9_]*\\\\)?(View_)?#i', '', $class)));
+			$this->_view = strtolower(str_replace('_', DS, preg_replace('#^([a-z0-9_]*\\\\)?(View_)?#i', '', $class)));
 		}
 
-		$this->set_template();
-		$this->_method		= $method;
-		$this->_auto_encode = \View::$auto_encode;
+		$this->set_view();
+
+		$this->_method = $method;
 
 		$this->before();
-
-		// Set this as the controller output if this is the first ViewModel loaded
-		if (empty(\Request::active()->controller_instance->response->body))
-		{
-			\Request::active()->controller_instance->response->body = $this;
-		}
 	}
 
 	/**
 	 * Must return a View object or something compatible
 	 *
-	 * @return	Object	any object on which the template vars can be set and which has a toString method
+	 * @return  Object  any object on which the template vars can be set and which has a toString method
 	 */
-	protected function set_template()
+	protected function set_view()
 	{
-		$this->_template = \View::factory($this->_template);
+		$this->_view = \View::forge($this->_view);
 	}
 
 	/**
-	 * Change auto encoding setting
+	 * Returns the active request object.
 	 *
-	 * @param   null|bool  change setting (bool) or get the current setting (null)
-	 * @return  void|bool  returns current setting or nothing when it is changed
+	 * @return  Request
 	 */
-	public function auto_encoding($setting = null)
+	protected function request()
 	{
-		if (is_null($setting))
-		{
-			return $this->_auto_encode;
-		}
-
-		$this->_auto_encode = (bool) $setting;
-
-		return $this;
+		return $this->_active_request;
 	}
 
 	/**
@@ -131,9 +124,9 @@ abstract class ViewModel {
 	/**
 	 * Fetches an existing value from the template
 	 *
-	 * @return	mixed
+	 * @return  mixed
 	 */
-	public function __get($name)
+	public function & __get($name)
 	{
 		return $this->get($name);
 	}
@@ -141,77 +134,115 @@ abstract class ViewModel {
 	/**
 	 * Gets a variable from the template
 	 *
-	 * @param	string
+	 * @param  string
 	 */
-	public function get($name)
+	public function & get($key, $default = null)
 	{
-		return $this->_template->{$name};
+		if (is_null($default) and func_num_args() === 1)
+		{
+			return $this->_view->get($key);
+		}
+		return $this->_view->get($key, $default);
 	}
 
 	/**
 	 * Sets and sanitizes a variable on the template
 	 *
-	 * @param	string
-	 * @param	mixed
+	 * @param  string
+	 * @param  mixed
 	 */
-	public function __set($name, $val)
+	public function __set($key, $value)
 	{
-		return $this->set($name, $val, \View::$auto_encode);
+		return $this->set($key, $value);
 	}
 
 	/**
 	 * Sets a variable on the template
 	 *
-	 * @param	string
-	 * @param	mixed
-	 * @param	bool|null
+	 * @param  string
+	 * @param  mixed
+	 * @param  bool|null
 	 */
-	public function set($name, $val, $encode = null)
+	public function set($key, $value, $filter = null)
 	{
-		$this->_template->set($name, $val, $encode);
+		is_null($filter) and $filter = $this->_auto_filter;
+		$this->_view->set($key, $value, $filter);
 
 		return $this;
 	}
 
 	/**
-	 * Sets a variable on the template without sanitizing
-	 * Note: Objects are auto-converted to strings unless they're ViewModel, View or Closure instances, if you want
-	 * 		objects not to be converted add them through set_raw().
+	 * Magic method, determines if a variable is set.
 	 *
-	 * @param	string
-	 * @param	mixed
+	 *     isset($view->foo);
+	 *
+	 * @param   string  variable name
+	 * @return  boolean
 	 */
-	public function set_safe($name, $val)
+	public function __isset($key)
 	{
-		\Error::notice('The ViewModel::set_safe() method is depricated and will be removed at 1.0. Use set(name, var, true) instead.');
-		$this->_template->set($name, $val, true);
+		return isset($this->_view->$key);
+	}
+
+	/**
+	 * Assigns a value by reference. The benefit of binding is that values can
+	 * be altered without re-setting them. It is also possible to bind variables
+	 * before they have values. Assigned values will be available as a
+	 * variable within the view file:
+	 *
+	 *     $this->bind('ref', $bar);
+	 *
+	 * @param   string   variable name
+	 * @param   mixed    referenced variable
+	 * @param   bool     Whether to filter the var on output
+	 * @return  $this
+	 */
+	public function bind($key, &$value, $filter = null)
+	{
+		$this->_view->bind($key, $value, $filter);
 
 		return $this;
 	}
 
 	/**
-	 * Sets a variable on the template without sanitizing
+	 * Change auto filter setting
 	 *
-	 * @param	string
-	 * @param	mixed
+	 * @param   null|bool  change setting (bool) or get the current setting (null)
+	 * @return  void|bool  returns current setting or nothing when it is changed
 	 */
-	public function set_raw($name, $val)
+	public function auto_filter($setting = null)
 	{
-		\Error::notice('The ViewModel::set_safe() method is depricated and will be removed at 1.0. Use set(name, var, false) instead.');
-		$this->_template->set($name, $val, false);
+		if (func_num_args() == 0)
+		{
+			return $this->_view->auto_filter();
+		}
 
-		return $this;
+		return $this->_view->auto_filter($setting);
 	}
+
 
 	/**
 	 * Add variables through method and after() and create template as a string
 	 */
 	public function render()
 	{
+		if (class_exists('Request', false))
+		{
+			$current_request = Request::active();
+			Request::active($this->_active_request);
+		}
+
 		$this->{$this->_method}();
 		$this->after();
 
-		return (string) $this->_template;
+		$return = $this->_view->render();
+
+		if (class_exists('Request', false))
+		{
+			Request::active($current_request);
+		}
+
+		return $return;
 	}
 
 	/**

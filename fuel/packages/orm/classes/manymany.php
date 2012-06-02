@@ -6,14 +6,14 @@
  * @version		1.0
  * @author		Fuel Development Team
  * @license		MIT License
- * @copyright	2010 - 2011 Fuel Development Team
+ * @copyright	2010 - 2012 Fuel Development Team
  * @link		http://fuelphp.com
  */
 
 namespace Orm;
 
-class ManyMany extends Relation {
-
+class ManyMany extends Relation
+{
 	protected $key_from = array('id');
 
 	protected $key_to = array('id');
@@ -42,10 +42,14 @@ class ManyMany extends Relation {
 	{
 		$this->name        = $name;
 		$this->model_from  = $from;
-		$this->model_to    = array_key_exists('model_to', $config) ? $config['model_to'] : \Inflector::get_namespace($from).'Model_'.\Inflector::classify($name);
-		$this->key_from    = array_key_exists('key_from', $config) ? (array) $config['key_from'] : $this->key_from;
-		$this->key_to      = array_key_exists('key_to', $config) ? (array) $config['key_to'] : $this->key_to;
-		$this->conditions  = array_key_exists('conditions', $config) ? (array) $config['conditions'] : array();
+		$this->model_to    = array_key_exists('model_to', $config)
+			? $config['model_to'] : \Inflector::get_namespace($from).'Model_'.\Inflector::classify($name);
+		$this->key_from    = array_key_exists('key_from', $config)
+			? (array) $config['key_from'] : $this->key_from;
+		$this->key_to      = array_key_exists('key_to', $config)
+			? (array) $config['key_to'] : $this->key_to;
+		$this->conditions  = array_key_exists('conditions', $config)
+			? (array) $config['conditions'] : array();
 
 		if ( ! empty($config['table_through']))
 		{
@@ -63,13 +67,16 @@ class ManyMany extends Relation {
 		$this->key_through_to = ! empty($config['key_through_to'])
 			? (array) $config['key_through_to'] : (array) \Inflector::foreign_key($this->model_to);
 
-		$this->cascade_save    = array_key_exists('cascade_save', $config) ? $config['cascade_save'] : $this->cascade_save;
-		$this->cascade_delete  = array_key_exists('cascade_delete', $config) ? $config['cascade_delete'] : $this->cascade_delete;
+		$this->cascade_save    = array_key_exists('cascade_save', $config)
+			? $config['cascade_save'] : $this->cascade_save;
+		$this->cascade_delete  = array_key_exists('cascade_delete', $config)
+			? $config['cascade_delete'] : $this->cascade_delete;
 
 		if ( ! class_exists($this->model_to))
 		{
-			throw new \Fuel_Exception('Related model not found by Many_Many relation "'.$this->name.'": '.$this->model_to);
+			throw new \FuelException('Related model not found by Many_Many relation "'.$this->name.'": '.$this->model_to);
 		}
+		$this->model_to = get_real_class($this->model_to);
 	}
 
 	public function get(Model $from)
@@ -120,8 +127,6 @@ class ManyMany extends Relation {
 
 	public function join($alias_from, $rel_name, $alias_to_nr, $conditions = array())
 	{
-		$conditions = array_merge($this->conditions, $conditions);
-
 		$alias_to = 't'.$alias_to_nr;
 
 		$models = array(
@@ -130,7 +135,7 @@ class ManyMany extends Relation {
 				'connection'   => call_user_func(array($this->model_to, 'connection')),
 				'table'        => array($this->table_through, $alias_to.'_through'),
 				'primary_key'  => null,
-				'join_type'    => 'left',
+				'join_type'    => \Arr::get($conditions, 'join_type') ?: \Arr::get($this->conditions, 'join_type', 'left'),
 				'join_on'      => array(),
 				'columns'      => $this->select_through($alias_to.'_through'),
 				'rel_name'     => $this->model_through,
@@ -141,13 +146,13 @@ class ManyMany extends Relation {
 				'connection'   => call_user_func(array($this->model_to, 'connection')),
 				'table'        => array(call_user_func(array($this->model_to, 'table')), $alias_to),
 				'primary_key'  => call_user_func(array($this->model_to, 'primary_key')),
-				'join_type'    => 'left',
+				'join_type'    => \Arr::get($conditions, 'join_type') ?: \Arr::get($this->conditions, 'join_type', 'left'),
 				'join_on'      => array(),
 				'columns'      => $this->select($alias_to),
 				'rel_name'     => strpos($rel_name, '.') ? substr($rel_name, strrpos($rel_name, '.') + 1) : $rel_name,
 				'relation'     => $this,
-				'where'        => array_key_exists('where', $conditions)    ? $conditions['where']    : array(),
-				'order_by'     => array_key_exists('order_by', $conditions) ? $conditions['order_by'] : array(),
+				'where'        => \Arr::get($conditions, 'where', array()),
+				'order_by'     => \Arr::get($conditions, 'order_by') ?: \Arr::get($this->conditions, 'order_by', array()),
 			)
 		);
 
@@ -164,6 +169,17 @@ class ManyMany extends Relation {
 			$models[$rel_name]['join_on'][] = array($alias_to.'_through.'.$key, '=', $alias_to.'.'.current($this->key_to));
 			next($this->key_to);
 		}
+		foreach (\Arr::get($this->conditions, 'where', array()) as $key => $condition)
+		{
+			! is_array($condition) and $condition = array($key, '=', $condition);
+			if ( ! $condition[0] instanceof \Fuel\Core\Database_Expression and strpos($condition[0], '.') === false)
+			{
+				$condition[0] = $alias_to.'.'.$condition[0];
+			}
+			is_string($condition[2]) and $condition[2] = \Db::quote($condition[2], $models[$rel_name]['connection']);
+
+			$models[$rel_name]['join_on'][] = $condition;
+		}
 
 		return $models;
 	}
@@ -177,7 +193,7 @@ class ManyMany extends Relation {
 
 		if ( ! is_array($models_to) and ($models_to = is_null($models_to) ? array() : $models_to) !== array())
 		{
-			throw new \Fuel_Exception('Assigned relationships must be an array or null, given relationship value for '.
+			throw new \FuelException('Assigned relationships must be an array or null, given relationship value for '.
 				$this->name.' is invalid.');
 		}
 		$original_model_ids === null and $original_model_ids = array();
@@ -187,7 +203,7 @@ class ManyMany extends Relation {
 		{
 			if ( ! $model_to instanceof $this->model_to)
 			{
-				throw new \Fuel_Exception('Invalid Model instance added to relations in this model.');
+				throw new \FuelException('Invalid Model instance added to relations in this model.');
 			}
 
 			// Save if it's a yet unsaved object
@@ -288,14 +304,7 @@ class ManyMany extends Relation {
 		$model_from->freeze();
 
 		// Delete all relationship entries for the model_from
-		$query = \DB::delete($this->table_through);
-		reset($this->key_from);
-		foreach ($this->key_through_from as $key)
-		{
-			$query->where($key, '=', $model_from->{current($this->key_from)});
-			next($this->key_from);
-		}
-		$query->execute(call_user_func(array($model_from, 'connection')));
+		$this->delete_related($model_from);
 
 		$cascade = is_null($cascade) ? $this->cascade_delete : (bool) $cascade;
 		if ($cascade and ! empty($model_to))
@@ -306,6 +315,17 @@ class ManyMany extends Relation {
 			}
 		}
 	}
-}
 
-/* End of file manymany.php */
+	public function delete_related($model_from)
+	{
+		// Delete all relationship entries for the model_from
+		$query = \DB::delete($this->table_through);
+		reset($this->key_from);
+		foreach ($this->key_through_from as $key)
+		{
+			$query->where($key, '=', $model_from->{current($this->key_from)});
+			next($this->key_from);
+		}
+		$query->execute(call_user_func(array($model_from, 'connection')));
+	}
+}

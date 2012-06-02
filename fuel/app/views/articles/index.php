@@ -44,7 +44,7 @@
 			<?php echo Html::anchor('articles/publish/'.$article->id, 'Draft', array('title' => 'Click to Publish')); ?>
 			<?php endif; ?>
 		</td>
-		<td width="11%"><?php echo Date::Factory($article->created_at)->format("%d/%m/%Y"); ?></td>
+		<td width="11%"><?php echo Date::forge($article->created_at)->format("%d/%m/%Y"); ?></td>
 		<td width="11%">
 			<?php echo Html::anchor('articles/edit/'.$article->id, 'edit'); ?> /
      		<?php echo Html::anchor('articles/delete/'.$article->id, 'delete'); ?>
@@ -61,7 +61,7 @@
 	<?php if (!$show): ?>
 	<span>You did not add any articles. <?php echo Html::anchor('articles/add', 'Add an Article'); ?>.</span>
 	<?php else: ?>
-	<span>You do not have any <?php echo Inflector::singularize($show); ?> articles. 
+	<span>You do not have any <?php echo Inflector::singularize($show); ?> articles.
 		<?php echo Html::anchor('articles/add', 'Add an Article'); ?>.</span>
 	<?php endif; ?>
 </div>

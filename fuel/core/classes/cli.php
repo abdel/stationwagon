@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -20,9 +20,10 @@ namespace Fuel\Core;
  * @package		Fuel
  * @category	Core
  * @author		Phil Sturgeon
- * @link		http://fuelphp.com/docs/classes/cli.html
+ * @link		http://docs.fuelphp.com/classes/cli.html
  */
-class Cli {
+class Cli
+{
 
 	public static $readline_support = false;
 
@@ -68,7 +69,7 @@ class Cli {
 	{
 		if ( ! \Fuel::$is_cli)
 		{
-			throw new Exception('Cli class cannot be used outside of the command line.');
+			throw new \Exception('Cli class cannot be used outside of the command line.');
 		}
 		for ($i = 1; $i < $_SERVER['argc']; $i++)
 		{
@@ -101,12 +102,12 @@ class Cli {
 	{
 		if ( ! isset(static::$args[$name]))
 		{
-			return $default;
+			return \Fuel::value($default);
 		}
 		return static::$args[$name];
 	}
 
-	
+
 	/**
 	 * Get input from the shell, using readline or the standard STDIN
 	 *
@@ -326,17 +327,17 @@ class Cli {
 			else
 			{
 				static::write(static::$wait_msg);
-				static::read();
+				static::input();
 			}
 		}
 	}
 
 
 	/**
-	 * if oprerating system === windows
+	 * if operating system === windows
 	 */
  	public static function is_windows()
- 	{ 
+ 	{
  		return 'win' === strtolower(substr(php_uname("s"), 0, 3));
  	}
 
@@ -376,25 +377,25 @@ class Cli {
 	 * optionally a background color.
 	 *
 	 * @param	string	$text		the text to color
-	 * @param	atring	$foreground the foreground color
+	 * @param	string	$foreground the foreground color
 	 * @param	string	$background the background color
 	 * @return	string	the color coded string
 	 */
 	public static function color($text, $foreground, $background = null)
 	{
-		if (static::is_windows())
+		if (static::is_windows() and ! \Input::server('ANSICON'))
 		{
 			return $text;
 		}
-		
+
 		if ( ! array_key_exists($foreground, static::$foreground_colors))
 		{
-			throw new \Fuel_Exception('Invalid CLI foreground color: '.$foreground);
+			throw new \FuelException('Invalid CLI foreground color: '.$foreground);
 		}
 
 		if ( $background !== null and ! array_key_exists($background, static::$background_colors))
 		{
-			throw new \Fuel_Exception('Invalid CLI background color: '.$background);
+			throw new \FuelException('Invalid CLI background color: '.$background);
 		}
 
 		$string = "\033[".static::$foreground_colors[$foreground]."m";
@@ -408,7 +409,7 @@ class Cli {
 
 		return $string;
 	}
-	
+
 	/**
 	* Spawn Background Process
 	*
@@ -425,9 +426,9 @@ class Cli {
 		{
 			pclose(popen('start /b '.$call, 'r'));
 	    }
-	
+
 		// Some sort of UNIX
-		else 
+		else
 		{
 			pclose(popen($call.' > '.$output.' &', 'r'));
 	    }

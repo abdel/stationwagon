@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -43,6 +43,9 @@ return array(
 
 	// cookie path  (optional, default = '/')
 	'cookie_path'		=> '/',
+
+	// cookie http_only flag  (optional, default = use the cookie class default)
+	'cookie_http_only'	=> null,
 
 	// if true, the session expires when the browser is closed (optional, default = false)
 	'expire_on_close'	=> false,

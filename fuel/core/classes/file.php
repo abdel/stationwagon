@@ -1,19 +1,19 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
 namespace Fuel\Core;
 
 
-class FileAccessException extends \Fuel_Exception {}
+class FileAccessException extends \FuelException {}
 class OutsideAreaException extends \OutOfBoundsException {}
 class InvalidPathException extends \FileAccessException {}
 
@@ -26,7 +26,8 @@ class InvalidPathException extends \FileAccessException {}
  * @subpackage  Core
  * @category    Core
  */
-class File {
+class File
+{
 
 	/**
 	 * @var  array  loaded area's
@@ -37,17 +38,23 @@ class File {
 	{
 		\Config::load('file', true);
 
-		static::$areas[null] = \File_Area::factory(\Config::get('file.base_config', array()));
+		// make sure the configured chmod values are octal
+		$chmod = \Config::get('file.chmod.folders', 0777);
+		is_string($chmod) and \Config::set('file.chmod.folders', octdec($chmod));
+		$chmod = \Config::get('file.chmod.files', 0666);
+		is_string($chmod) and \Config::set('file.chmod.files', octdec($chmod));
+
+		static::$areas[null] = \File_Area::forge(\Config::get('file.base_config', array()));
 
 		foreach (\Config::get('file.areas', array()) as $name => $config)
 		{
-			static::$areas[$name] = \File_Area::factory($config);
+			static::$areas[$name] = \File_Area::forge($config);
 		}
 	}
 
-	public static function factory(Array $config = array())
+	public static function forge(array $config = array())
 	{
-		return \File_Area::factory($config);
+		return \File_Area::forge($config);
 	}
 
 	/**
@@ -70,11 +77,11 @@ class File {
 	 * File & directory objects factory
 	 *
 	 * @param   string  path to the file or directory
-	 * @param   Array   configuration items
+	 * @param   array   configuration items
 	 * @param   string|File_Area|null  file area name, object or null for base area
 	 * @return  File_Handler_File
 	 */
-	public static function get($path, Array $config = array(), $area = null)
+	public static function get($path, array $config = array(), $area = null)
 	{
 		return static::instance($area)->get_handler($path, $config);
 	}
@@ -84,7 +91,7 @@ class File {
 	 *
 	 * @return  bool
 	 */
-	public static function get_url($path, Array $config = array(), $area = null)
+	public static function get_url($path, array $config = array(), $area = null)
 	{
 		return static::get($path, $config, $area)->get_url();
 	}
@@ -127,10 +134,11 @@ class File {
 	 * @param   string|File_Area|null  file area name, object or null for non-specific
 	 * @return  bool
 	 */
-	public static function create_dir($basepath, $name, $chmod = 0777, $area = null)
+	public static function create_dir($basepath, $name, $chmod = null, $area = null)
 	{
 		$basepath	= rtrim(static::instance($area)->get_path($basepath), '\\/').DS;
 		$new_dir	= static::instance($area)->get_path($basepath.$name);
+		is_null($chmod) and $chmod = \Config::get('file.chmod.folders', 0777);
 
 		if ( ! is_dir($basepath) or ! is_writable($basepath))
 		{
@@ -177,7 +185,7 @@ class File {
 	 * @param   int         depth to recurse directory, 1 is only current and 0 or smaller is unlimited
 	 * @param   Array|null  array of partial regexes or non-array for default
 	 * @param   string|File_Area|null  file area name, object or null for base area
-	 * @return  Array  directory contents in an array
+	 * @return  array  directory contents in an array
 	 */
 	public static function read_dir($path, $depth = 0, $filter = null, $area = null)
 	{
@@ -249,12 +257,12 @@ class File {
 				// Use recursion when depth not depleted or not limited...
 				if ($depth < 1 or $new_depth > 0)
 				{
-					$dirs[$file] = static::read_dir($path.$file.DS, $new_depth, $filter, $area);
+					$dirs[$file.DS] = static::read_dir($path.$file.DS, $new_depth, $filter, $area);
 				}
 				// ... or set dir to false when not read
 				else
 				{
-					$dirs[$file] = false;
+					$dirs[$file.DS] = false;
 				}
 			}
 			else
@@ -475,8 +483,8 @@ class File {
 		{
 			if (is_array($file))
 			{
-				$check = static::create_dir($new_path.DS, $dir, fileperms($path.$dir.DS) ?: 0777, $area);
-				$check and static::copy_dir($path.$dir.DS, $new_path.$dir.DS, $area);
+				$check = static::create_dir($new_path.DS, substr($dir, 0, -1), fileperms($path.$dir) ?: 0777, $area);
+				$check and static::copy_dir($path.$dir.DS, $new_path.$dir, $area);
 			}
 			else
 			{
@@ -502,8 +510,8 @@ class File {
 	 */
 	public static function symlink($path, $link_path, $is_file = true, $area = null)
 	{
-		$path      = rtrim(static::instance($area)->get_path($path), '\\/').DS;
-		$link_path = rtrim(static::instance($area)->get_path($link_path), '\\/').DS;
+		$path      = rtrim(static::instance($area)->get_path($path), '\\/');
+		$link_path = rtrim(static::instance($area)->get_path($link_path), '\\/');
 
 		if ($is_file and ! is_file($path))
 		{
@@ -532,7 +540,7 @@ class File {
 	{
 		$path = rtrim(static::instance($area)->get_path($path), '\\/');
 
-		if ( ! is_file($path))
+		if ( ! is_file($path) and ! is_link($path))
 		{
 			throw new \InvalidPathException('Cannot delete file: given path "'.$path.'" is not a file.');
 		}
@@ -719,8 +727,9 @@ class File {
 	 * @param  string|null  custom name for the file to be downloaded
 	 * @param  string|null  custom mime type or null for file mime type
 	 * @param  string|File_Area|null  file area name, object or null for base area
+	 * @param  bool        if false, return instead of exit
 	 */
-	public static function download($path, $name = null, $mime = null, $area = null)
+	public static function download($path, $name = null, $mime = null, $area = null, $exit = true)
 	{
 		$info = static::file_info($path, $area);
 
@@ -732,7 +741,10 @@ class File {
 			throw new \FileAccessException('Filename given could not be opened for download.');
 		}
 
-		ob_end_clean();
+		while (ob_get_level() > 0)
+		{
+			ob_end_clean();
+		}
 
 		ini_get('zlib.output_compression') and ini_set('zlib.output_compression', 0);
 		! ini_get('safe_mode') and set_time_limit(0);
@@ -752,7 +764,11 @@ class File {
 
 		static::close_file($file, $area);
 
-		exit;
+		if ($exit)
+		{
+			\Event::shutdown();
+			exit;
+		}
 	}
 
 }

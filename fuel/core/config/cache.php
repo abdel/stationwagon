@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -59,6 +59,11 @@ return array(
 		'servers'   => array(   // array of servers and portnumbers that run the memcached service
 			array('host' => '127.0.0.1', 'port' => 11211, 'weight' => 100)
 		),
+	),
+
+	// specific configuration settings for the apc driver
+	'apc'  => array(
+		'cache_id'  => 'fuel',  // unique id to distinquish fuel cache items from others stored on the same server(s)
 	),
 
 	// specific configuration settings for the redis driver

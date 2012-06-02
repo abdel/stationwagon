@@ -23,7 +23,6 @@ class PhpQuickProfiler {
 	public function __construct($startTime, $config = '') {
 		$this->startTime = $startTime;
 		$this->config = $config;
-		require_once('console.php');
 	}
 
 	/*-------------------------------------------
@@ -46,6 +45,18 @@ class PhpQuickProfiler {
 			}
 		}
 		$this->output['logs'] = $logs;
+	}
+
+	/*-------------------------------------------
+	AGGREGATE DATA ON THE PATHS ADDED
+	-------------------------------------------*/
+
+	public function gatherPathData()
+	{
+		$this->output['paths'] = \Finder::instance()->paths();
+		$this->output['pathTotals'] = array(
+			'count' => count($this->output['paths']),
+		);
 	}
 
 	/*-------------------------------------------
@@ -96,7 +107,9 @@ class PhpQuickProfiler {
 		$queryTotals = array();
 		$queryTotals['count'] = 0;
 		$queryTotals['time'] = 0;
+		$queryTotals['duplicates'] = 0;
 		$queries = array();
+		$unique_queries = array();
 
 		if($this->db != '') {
 			$queryTotals['count'] += $this->db->queryCount;
@@ -104,6 +117,15 @@ class PhpQuickProfiler {
 				$query = $this->attemptToExplainQuery($query);
 				$queryTotals['time'] += $query['time'];
 				$query['time'] = $this->getReadableTime($query['time']);
+				$duplicate = false;
+				if ( in_array($query['sql'], $unique_queries) ) {
+					$duplicate = true;
+					$queryTotals['duplicates']++;
+				}
+				else {
+					$unique_queries[] = $query['sql'];
+				}
+				$query['duplicate'] = $duplicate;
 				$queries[] = $query;
 			}
 		}
@@ -122,7 +144,7 @@ class PhpQuickProfiler {
 		{
 			$rs = false;
 			try {
-				$sql = 'EXPLAIN '.$query['sql'];
+				$sql = str_replace('&#039;', '"', 'EXPLAIN '.$query['sql']);
 				$rs = \DB::query($sql, \DB::SELECT)->execute();
 			}
 			catch(Exception $e)
@@ -195,6 +217,7 @@ class PhpQuickProfiler {
 	public function display($db = '') {
 		$this->db = $db;
 		$this->gatherConsoleData();
+		$this->gatherPathData();
 		$this->gatherFileData();
 		$this->gatherMemoryData();
 		$this->gatherQueryData();

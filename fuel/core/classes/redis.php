@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -23,13 +23,14 @@
 namespace Fuel\Core;
 
 
-class RedisException extends Fuel_Exception {}
+class RedisException extends \FuelException {}
 
 
 /**
  * Redisent, a Redis interface for the modest among us
  */
-class Redis {
+class Redis
+{
 
 	protected static $instances = array();
 
@@ -112,12 +113,15 @@ class Redis {
 				}
 				$read = 0;
 				$size = substr($reply, 1);
-				do
+				if ($size > 0)
 				{
-					$block_size = ($size - $read) > 1024 ? 1024 : ($size - $read);
-					$response .= fread($this->connection, $block_size);
-					$read += $block_size;
-				} while ($read < $size);
+					do
+					{
+						$block_size = ($size - $read) > 1024 ? 1024 : ($size - $read);
+						$response .= fread($this->connection, $block_size);
+						$read += $block_size;
+					} while ($read < $size);
+				}
 				fread($this->connection, 2);
 			break;
 

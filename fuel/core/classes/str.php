@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -18,7 +18,8 @@ namespace Fuel\Core;
  * PHP needs to be compiled with --enable-mbstring
  * or a fallback without encoding support is used
  */
-class Str {
+class Str
+{
 
 	/**
 	 * Truncates a string to the given length.  It will optionally preserve
@@ -36,6 +37,18 @@ class Str {
 		$tags = array();
 		if ($is_html)
 		{
+			// Handle special characters.
+			preg_match_all('/&[a-z]+;/i', strip_tags($string), $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER);
+			foreach ($matches as $match)
+			{
+				if ($match[0][1] >= $limit)
+				{
+					break;
+				}
+				$limit += (static::length($match[0][0]) - 1);
+			}
+
+			// Handle all the html tags.
 			preg_match_all('/<[^>]+>([^<]*)/', $string, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER);
 			foreach ($matches as $match)
 			{
@@ -43,20 +56,20 @@ class Str {
 				{
 					break;
 				}
-				$tag = substr(strtok($match[0][0], " \t\n\r\0\x0B>"), 1);
+				$tag = static::sub(strtok($match[0][0], " \t\n\r\0\x0B>"), 1);
 				if($tag[0] != '/')
 				{
 					$tags[] = $tag;
 				}
-				elseif (end($tags) == substr($tag, 1))
+				elseif (end($tags) == static::sub($tag, 1))
 				{
 					array_pop($tags);
 				}
 				$offset += $match[1][1] - $match[0][1];
 			}
 		}
-		$new_string = substr($string, 0, $limit = min(strlen($string),  $limit + $offset));
-		$new_string .= (strlen($string) > $limit ? $continuation : '');
+		$new_string = static::sub($string, 0, $limit = min(static::length($string),  $limit + $offset));
+		$new_string .= (static::length($string) > $limit ? $continuation : '');
 		$new_string .= (count($tags = array_reverse($tags)) ? '</'.implode('></',$tags).'>' : '');
 		return $new_string;
 	}
@@ -72,6 +85,43 @@ class Str {
 		preg_match('/(.+)'.$separator.'([0-9]+)$/', $str, $match);
 
 		return isset($match[2]) ? $match[1].$separator.($match[2] + 1) : $str.$separator.$first;
+	}
+
+	/**
+	 * substr
+	 *
+	 * @param   string    $str       required
+	 * @param   int       $start     required
+	 * @param   int|null  $length
+	 * @param   string    $encoding  default UTF-8
+	 * @return  string
+	 */
+	public static function sub($str, $start, $length = null, $encoding = null)
+	{
+		$encoding or $encoding = \Fuel::$encoding;
+
+		// substr functions don't parse null correctly
+		$length = is_null($length) ? (function_exists('mb_substr') ? mb_strlen($str, $encoding) : strlen($str)) - $start : $length;
+
+		return function_exists('mb_substr')
+			? mb_substr($str, $start, $length, $encoding)
+			: substr($str, $start, $length);
+	}
+
+	/**
+	 * strlen
+	 *
+	 * @param   string  $str       required
+	 * @param   string  $encoding  default UTF-8
+	 * @return  int
+	 */
+	public static function length($str, $encoding = null)
+	{
+		$encoding or $encoding = \Fuel::$encoding;
+
+		return function_exists('mb_strlen')
+			? mb_strlen($str, $encoding)
+			: strlen($str);
 	}
 
 	/**
@@ -122,7 +172,7 @@ class Str {
 		return function_exists('mb_strtolower')
 			? mb_strtolower(mb_substr($str, 0, 1, $encoding), $encoding).
 				mb_substr($str, 1, mb_strlen($str, $encoding), $encoding)
-			: ucfirst($str);
+			: lcfirst($str);
 	}
 
 	/**
@@ -250,6 +300,33 @@ class Str {
 			static $i = 0;
 			return $args[($next ? $i++ : $i) % count($args)];
 		};
+	}
+
+	/**
+	 * Parse the params from a string using strtr()
+	 *
+	 * @param   string  string to parse
+	 * @param   array   params to str_replace
+	 * @return  string
+	 */
+	public static function tr($string, $array = array())
+	{
+		if (is_string($string))
+		{
+			$tr_arr = array();
+
+			foreach ($array as $from => $to)
+			{
+				$tr_arr[':'.$from] = $to;
+			}
+			unset($array);
+
+			return strtr($string, $tr_arr);
+		}
+		else
+		{
+			return $string;
+		}
 	}
 }
 

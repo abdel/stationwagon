@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -20,9 +20,10 @@ namespace Fuel\Core;
  * @package		Fuel
  * @category	Core
  * @author		Phil Sturgeon
- * @link		http://fuelphp.com/docs/classes/debug.html
+ * @link		http://docs.fuelphp.com/classes/debug.html
  */
-class Debug {
+class Debug
+{
 
 	protected static $js_displayed = false;
 
@@ -52,7 +53,6 @@ class Debug {
 		}
 
 		$arguments = func_get_args();
-		$total_arguments = count($arguments);
 
 		$callee['file'] = \Fuel::clean_path($callee['file']);
 
@@ -366,6 +366,52 @@ JS;
 
 		// render it
 		return static::dump(parse_ini_file(get_cfg_var('cfg_file_path'), true));
+	}
+
+	/**
+	 * Benchmark anything that is callable
+	 *
+	 * @access public
+	 * @static
+	 */
+	public static function benchmark($callable, array $params = array())
+	{
+		// get the before-benchmark time
+		if (function_exists('getrusage'))
+		{
+			$dat = getrusage();
+			$utime_before = $dat['ru_utime.tv_sec'] + round($dat['ru_utime.tv_usec']/1000000, 4);
+			$stime_before = $dat['ru_stime.tv_sec'] + round($dat['ru_stime.tv_usec']/1000000, 4);
+		}
+		else
+		{
+			list($usec, $sec) = explode(" ", microtime());
+			$utime_before = ((float)$usec + (float)$sec);
+			$stime_before = 0;
+		}
+
+		// call the function to be benchmarked
+		$result = is_callable($callable) ? call_user_func_array($callable, $params) : null;
+
+		// get the after-benchmark time
+		if (function_exists('getrusage'))
+		{
+			$dat = getrusage();
+			$utime_after = $dat['ru_utime.tv_sec'] + round($dat['ru_utime.tv_usec']/1000000, 4);
+			$stime_after = $dat['ru_stime.tv_sec'] + round($dat['ru_stime.tv_usec']/1000000, 4);
+		}
+		else
+		{
+			list($usec, $sec) = explode(" ", microtime());
+			$utime_after = ((float)$usec + (float)$sec);
+			$stime_after = 0;
+		}
+
+		return array(
+			'user' => sprintf('%1.6f', $utime_after - $utime_before),
+			'system' => sprintf('%1.6f', $stime_after - $stime_before),
+			'result' => $result
+		);
 	}
 
 }

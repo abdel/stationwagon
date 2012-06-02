@@ -33,26 +33,131 @@ class Generate
 		'int' => 11
 	);
 
+	public static function config($args)
+	{
+		$file = strtolower(array_shift($args));
+
+		if (empty($file))
+		{
+			throw new Exception('No config filename has been provided.');
+		}
+
+		$config = array();
+
+		// load the config
+		if ($paths = \Finder::search('config', $file, '.php', true))
+		{
+			// Reverse the file list so that we load the core configs first and
+			// the app can override anything.
+			$paths = array_reverse($paths);
+			foreach ($paths as $path)
+			{
+				$config = \Fuel::load($path) + $config;
+			}
+		}
+		unset($path);
+
+		// We always pass in fields to a config, so lets sort them out here.
+		foreach ($args as $conf)
+		{
+			// Each paramater for a config is seperated by the : character
+			$parts = explode(":", $conf);
+
+			// We must have the 'name:value' if nothing else!
+			if (count($parts) >= 2)
+			{
+				$config[$parts[0]] = $parts[1];
+			}
+		}
+
+		$overwrite = (\Cli::option('o') or \Cli::option('overwrite'));
+
+		// strip whitespace and add tab
+		$export = str_replace(array('  ', 'array ('), array("\t", 'array('), var_export($config, true));
+
+		$content = '<?php'.PHP_EOL.PHP_EOL.'return '.$export.';';
+		$content .= <<<CONF
+
+
+/* End of file $file.php */
+CONF;
+
+		$module = \Cli::option('module', \Cli::option('m'));
+
+		// add support for `php oil g config module::file arg1:value1`
+		if (strpos($file, '::') !== false)
+		{
+			list($module, $file) = explode('::', $file);
+		}
+
+		// get the namespace path (if available)
+		if ( ! empty($module) and $path = \Autoloader::namespace_path('\\'.ucfirst($module)))
+		{
+			// strip the classes directory as we need the module root
+			// and construct the filename
+			$path = substr($path,0, -8).'config'.DS.$file.'.php';
+			$path_name = "\\".ucfirst($module).'::';
+		}
+		elseif ( ! empty($module))
+		{
+			throw new Exception("{$module} need to be loaded first, please use config always_load.modules.");
+		}
+		else
+		{
+			$path = APPPATH.'config'.DS.$file.'.php';
+			$path_name = 'APPPATH/';
+		}
+
+		if ( ! $overwrite and is_file($path))
+		{
+			throw new Exception("{$path_name}/config/{$file}.php already exist, please use --overwrite option to force update");
+		}
+
+		$path = pathinfo($path);
+
+		try
+		{
+			\File::update($path['dirname'], $path['basename'], $content);
+			\Cli::write("Created config: {$path_name}config/{$file}.php", 'green');
+		}
+		catch (\InvalidPathException $e)
+		{
+			throw new Exception("Invalid basepath, cannot update at ".$path_name."config".DS."{$file}.php");
+		}
+		catch (\FileAccessException $e)
+		{
+			throw new Exception($path_name."config".DS.$file.".php could not be written.");
+		}
+	}
+
 	public static function controller($args, $build = true)
 	{
-		$args = self::_clear_args($args);
-		$singular = strtolower(array_shift($args));
-		$actions = $args;
-		
-		$plural = \Inflector::pluralize($singular);
-		
-		$filename = trim(str_replace(array('_', '-'), DS, $singular), DS);
+		if ( ! ($name = \Str::lower(array_shift($args))))
+		{
+			throw new Exception('No controller name was provided.');
+		}
 
-		$filepath = APPPATH . 'classes/controller/'.$filename.'.php';
+		$actions = $args;
+
+		$filename = trim(str_replace(array('_', '-'), DS, $name), DS);
+
+		$filepath = APPPATH.'classes'.DS.'controller'.DS.$filename.'.php';
 
 		// Uppercase each part of the class name and remove hyphens
-		$class_name = \Inflector::classify($plural);
+		$class_name = \Inflector::classify($name, false);
 
-		// Stick "blogs" to the start of the array
-		array_unshift($args, $singular);
+		// Stick "blog" to the start of the array
+		array_unshift($args, $filename);
 
 		// Create views folder and each view file
-		static::views($args, false);
+		if (\Cli::option('crud'))
+		{
+			static::views($args, 'scaffolding'.DS.'crud'.DS.'views', false);
+		}
+		else
+		{
+			static::views($args, 'scaffolding'.DS.'orm'.DS.'views', false);
+		}
 
 		$actions or $actions = array('index');
 
@@ -62,8 +167,8 @@ class Generate
 			$action_str .= '
 	public function action_'.$action.'()
 	{
-		$this->template->title = \'' . \Inflector::humanize($singular) .' &raquo; ' . \Inflector::humanize($action) . '\';
-		$this->template->content = View::factory(\''.$singular .'/' . $action .'\');
+		$this->template->title = \'' . \Inflector::humanize($name) .' &raquo; ' . \Inflector::humanize($action) . '\';
+		$this->template->content = View::forge(\''.$filename.'/' . $action .'\');
 	}'.PHP_EOL;
 		}
 
@@ -73,23 +178,28 @@ class Generate
 		$controller = <<<CONTROLLER
 <?php
 
-class Controller_{$class_name} extends {$extends} {
+class Controller_{$class_name} extends {$extends}
+{
 {$action_str}
 }
 
-/* End of file $filename.php */
 CONTROLLER;
 
 		// Write controller
 		static::create($filepath, $controller, 'controller');
-		
+
 		$build and static::build();
 	}
 
 
 	public static function model($args, $build = true)
 	{
-		$singular = \Str::lower(array_shift($args));
+		$singular = \Inflector::singularize(\Str::lower(array_shift($args)));
+
+		if (empty($singular) or strpos($singular, ':'))
+		{
+			throw new Exception("Command is invalid.".PHP_EOL."\tphp oil g model <modelname> [<fieldname1>:<type1> |<fieldname2>:<type2> |..]");
+		}
 
 		if (empty($args))
 		{
@@ -97,56 +207,177 @@ CONTROLLER;
 		}
 
 		$plural = \Inflector::pluralize($singular);
-		
+
 		$filename = trim(str_replace(array('_', '-'), DS, $singular), DS);
 
 		$filepath = APPPATH . 'classes/model/'.$filename.'.php';
 
 		// Uppercase each part of the class name and remove hyphens
-		$class_name = \Inflector::classify($plural);
+		$class_name = \Inflector::classify($singular, false);
 
 		$contents = '';
-		if ( ! \Cli::option('no-timestamps', false))
-		{
-			$contents = <<<CONTENTS
 
-	protected static \$_observers = array(
-		'Orm\\Observer_CreatedAt' => array('before_insert'),
-		'Orm\\Observer_UpdatedAt' => array('before_save'),
+		if (\Cli::option('crud'))
+		{
+			if($created_at = \Cli::option('created-at'))
+			{
+				is_string($created_at) or $created_at = 'created_at';
+
+				$contents .= <<<CONTENTS
+
+	protected static \$_created_at = '$created_at';
+
+CONTENTS;
+			}
+
+			if($updated_at = \Cli::option('updated-at'))
+			{
+				is_string($updated_at) or $updated_at = 'updated_at';
+
+				$contents .= <<<CONTENTS
+
+	protected static \$_updated_at = '$updated_at';
+
+CONTENTS;
+			}
+
+			if(\Cli::option('mysql-timestamp'))
+			{
+				$contents .= <<<CONTENTS
+
+	protected static \$_mysql_timestamp = true;
+
+CONTENTS;
+			}
+
+			$contents .= <<<CONTENTS
+
+	protected static \$_table_name = '{$plural}';
+
+CONTENTS;
+			$model = <<<MODEL
+<?php
+
+class Model_{$class_name} extends \Model_Crud
+{
+{$contents}
+}
+
+MODEL;
+		}
+		else
+		{
+			if ( ! \Cli::option('no-timestamp'))
+			{
+				$created_at = \Cli::option('created-at', 'created_at');
+				is_string($created_at) or $created_at = 'created_at';
+				$updated_at = \Cli::option('updated-at', 'updated_at');
+				is_string($updated_at) or $updated_at = 'updated_at';
+
+				$time_type = (\Cli::option('mysql-timestamp')) ? 'timestamp' : 'int';
+
+				$timestamp_properties = array($created_at.':'.$time_type, $updated_at.':'.$time_type);
+				$args = array_merge($args, $timestamp_properties);
+			}
+
+			// Turn foo:string into "id", "foo",
+			$properties = implode(",\n\t\t", array_map(function($field) {
+
+				// Only take valid fields
+				if (($field = strstr($field, ':', true)))
+				{
+					return "'".$field."'";
+				}
+
+			}, array_merge(array('id:int'), $args)));
+
+			if ( ! \Cli::option('no-properties'))
+			{
+				$contents .= <<<CONTENTS
+	protected static \$_properties = array(
+		{$properties}
 	);
 
 CONTENTS;
-		}
+			}
 
-		$model = <<<MODEL
+			if ( ! \Cli::option('no-timestamp'))
+			{
+				$mysql_timestamp = (\Cli::option('mysql-timestamp')) ? 'true' : 'false';
+
+				if(($created_at = \Cli::option('created-at')) and is_string($created_at))
+				{
+					$created_at = <<<CONTENTS
+
+			'property' => '$created_at',
+CONTENTS;
+				}
+				else
+				{
+					$created_at = '';
+				}
+
+				if(($updated_at = \Cli::option('updated-at')) and is_string($updated_at))
+				{
+					$updated_at = <<<CONTENTS
+
+			'property' => '$updated_at',
+CONTENTS;
+				}
+				else
+				{
+					$updated_at = '';
+				}
+
+				$contents .= <<<CONTENTS
+
+	protected static \$_observers = array(
+		'Orm\Observer_CreatedAt' => array(
+			'events' => array('before_insert'),
+			'mysql_timestamp' => $mysql_timestamp,$created_at
+		),
+		'Orm\Observer_UpdatedAt' => array(
+			'events' => array('before_save'),
+			'mysql_timestamp' => $mysql_timestamp,$updated_at
+		),
+	);
+CONTENTS;
+			}
+
+			$model = <<<MODEL
 <?php
 
-class Model_{$class_name} extends Orm\Model {{$contents}}
+class Model_{$class_name} extends \Orm\Model
+{
+{$contents}
+}
 
-/* End of file $filename.php */
 MODEL;
+		}
 
 		// Build the model
 		static::create($filepath, $model, 'model');
 
-		if ( ! empty($args))
+		if ( ! \Cli::option('no-migration'))
 		{
-			array_unshift($args, 'create_'.$plural);
-			static::migration($args, false);
-		}
+			if ( ! empty($args))
+			{
+				array_unshift($args, 'create_'.$plural);
+				static::migration($args, false);
+			}
 
-		else
-		{
-			throw new Exception('Not enough arguments to create this migration.');
+			else
+			{
+				throw new \Exception('Not enough arguments to create this migration.');
+			}
 		}
 
 		$build and static::build();
 	}
 
 
-	public static function views($args, $build = true)
+	public static function views($args, $subfolder, $build = true)
 	{
-		$args = self::_clear_args($args);
 		$controller = strtolower(array_shift($args));
 		$controller_title = \Inflector::humanize($controller);
 
@@ -160,7 +391,7 @@ MODEL;
 		// Add the default template if it doesnt exist
 		if ( ! file_exists($app_template = APPPATH.'views/template.php'))
 		{
-			static::create($app_template, file_get_contents(PKGPATH.'oil/views/default/template.php'), 'view');
+			static::create($app_template, file_get_contents(PKGPATH.'oil/views/scaffolding/template.php'), 'view');
 		}
 
 		foreach ($args as $action)
@@ -183,8 +414,18 @@ VIEW;
 		// Get the migration name
 		$migration_name = \Str::lower(str_replace(array('-', '/'), '_', array_shift($args)));
 
+		if (empty($migration_name) or strpos($migration_name, ':'))
+		{
+			throw new Exception("Command is invalid.".PHP_EOL."\tphp oil g migration <migrationname> [<fieldname1>:<type1> |<fieldname2>:<type2> |..]");
+		}
+
 		// Check if a migration with this name already exists
-		if (count($duplicates = glob(APPPATH."migrations/*_{$migration_name}*")) > 0)
+		if (($duplicates = glob(APPPATH."migrations/*_{$migration_name}*")) === false)
+		{
+			throw new Exception("Unable to read existing migrations. Do you have an 'open_basedir' defined?");
+		}
+
+		if (count($duplicates) > 0)
 		{
 			// Don't override a file
 			if (\Cli::option('s', \Cli::option('skip')) === true)
@@ -247,21 +488,44 @@ VIEW;
 				{
 					$subjects = array($matches[0], $matches[2]);
 				}
-				
+
 				// rename_field_{field}_to_{field}_in_{table} (with underscores in field names)
 				else if (count($matches) >= 5 && in_array('to', $matches) && in_array('in', $matches))
 				{
 					$subjects = array(
-					 implode('_', array_slice($matches, array_search('in', $matches)+1)), 
-					 implode('_', array_slice($matches, 0, array_search('to', $matches))), 
+					 implode('_', array_slice($matches, array_search('in', $matches)+1)),
+					 implode('_', array_slice($matches, 0, array_search('to', $matches))),
 					 implode('_', array_slice($matches, array_search('to', $matches)+1, array_search('in', $matches)-2))
+				  );
+				}
+
+				// rename_table
+				else if ($method_name == 'rename_table')
+				{
+					$subjects = array(
+					 implode('_', array_slice($matches, 0, array_search('to', $matches))),
+					 implode('_', array_slice($matches, array_search('to', $matches)+1))
 				  );
 				}
 
 				// create_{table} or drop_{table} (with underscores in table name)
 				else if (count($matches) !== 0)
 				{
-					$subjects = array(false, implode('_', $matches));
+					$name = str_replace(array('create_', 'add_', '_to_'), array('create-', 'add-', '-to-'), $migration_name);
+
+    				if (preg_match('/^(create|add)\-([a-z0-9\_]*)(\-to\-)?([a-z0-9\_]*)?$/i', $name, $deep_matches))
+    				{
+    					switch ($deep_matches[1])
+    					{
+    						case 'create' :
+    							$subjects = array(false, $deep_matches[2]);
+    						break;
+
+    						case 'add' :
+    							$subjects = array($deep_matches[2], $deep_matches[4]);
+    						break;
+    					}
+    				}
 				}
 
 				// There is no subject here so just carry on with a normal empty migration
@@ -285,7 +549,7 @@ VIEW;
 						$field_array['name'] = array_shift($parts);
 						foreach ($parts as $part_i => $part)
 						{
-							preg_match('/([a-z0-9_-]+)(?:\[([a-z0-9]+)\])?/i', $part, $part_matches);
+							preg_match('/([a-z0-9_-]+)(?:\[([0-9a-z\,\s]+)\])?/i', $part, $part_matches);
 							array_shift($part_matches);
 
 							if (count($part_matches) < 1)
@@ -322,7 +586,24 @@ VIEW;
 									}
 									else
 									{
-										$field_array['constraint'] = (int) $option[1];
+										// should support field_name:enum[value1,value2]
+										if ($type === 'enum')
+										{
+											$values = explode(',', $option[1]);
+											$option[1] = '"'.implode('","', $values).'"';
+
+											$field_array['constraint'] = $option[1];
+										}
+										// should support field_name:decimal[10,2]
+										elseif (in_array($type, array('decimal', 'float')))
+										{
+											$field_array['constraint'] = $option[1];
+										}
+										else
+										{
+											$field_array['constraint'] = (int) $option[1];
+										}
+
 									}
 								}
 								$option = $type;
@@ -369,8 +650,8 @@ VIEW;
 
 namespace Fuel\Migrations;
 
-class {$migration_name} {
-
+class {$migration_name}
+{
 	public function up()
 	{
 {$up}
@@ -401,6 +682,8 @@ Usage:
 Runtime options:
   -f, [--force]    # Overwrite files that already exist
   -s, [--skip]     # Skip files that already exist
+  -q, [--quiet]    # Supress status output
+  -t, [--speak]    # Speak errors in a robot voice
 
 Description:
   The 'oil' command can be used to generate MVC components, database migrations
@@ -412,13 +695,14 @@ Examples:
   php oil g migration <migrationname> [<fieldname1>:<type1> |<fieldname2>:<type2> |..]
   php oil g scaffold <modelname> [<fieldname1>:<type1> |<fieldname2>:<type2> |..]
   php oil g scaffold/template_subfolder <modelname> [<fieldname1>:<type1> |<fieldname2>:<type2> |..]
+  php oil g config <filename> [<key1>:<value1> |<key2>:<value2> |..]
 
 Note that the next two lines are equivalent:
   php oil g scaffold <modelname> ...
-  php oil g scaffold/default <modelname> ...
+  php oil g scaffold/crud <modelname> ...
 
 Documentation:
-  http://fuelphp.com/docs/packages/oil/generate.html
+  http://docs.fuelphp.com/packages/oil/generate.html
 HELP;
 
 		\Cli::write($output);
@@ -475,7 +759,7 @@ HELP;
 			$result = @fwrite($handle, $file['contents']);
 
 			// Write $somecontent to our opened file.
-			if ($result === FALSE)
+			if ($result === false)
 			{
 				throw new Exception('Cannot write to file: '. $file['path']);
 			}
@@ -515,26 +799,13 @@ HELP;
 		}
 		else
 		{
-			throw new Exception('Config file core/config/migrations.php');
+			throw new \Exception('Config file core/config/migrations.php');
 			exit;
 		}
 
 		$contents = preg_replace("#('version'[ \t]+=>)[ \t]+([0-9]+),#i", "$1 $version,", $contents);
 
 		static::create($app_path, $contents, 'config');
-	}
-
-	private static function _clear_args($actions = array())
-	{
- 		foreach ($actions as $key => $action)
-		{
-			if (substr($action, 0, 1) === '-')
-			{
-				unset($actions[$key]);
-			}
-		}
-
-		return $actions;
 	}
 }
 

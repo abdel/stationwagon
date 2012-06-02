@@ -1,21 +1,21 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
 namespace Fuel\Core;
 
 
-class FtpConnectionException extends \Fuel_Exception {}
+class FtpConnectionException extends \FuelException {}
 
-class FtpFileAccessException extends \Fuel_Exception {}
+class FtpFileAccessException extends \FuelException {}
 
 
 /**
@@ -24,7 +24,7 @@ class FtpFileAccessException extends \Fuel_Exception {}
  * @package		Fuel
  * @category	Core
  * @author		Phil Sturgeon
- * @link		http://fuelphp.com/docs/classes/ftp.html
+ * @link		http://docs.fuelphp.com/classes/ftp.html
  */
 class Ftp
 {
@@ -41,13 +41,13 @@ class Ftp
 	/**
 	 * Returns a new Ftp object. If you do not define the "file" parameter,
 	 *
-	 *     $ftp = static::factory('group');
+	 *     $ftp = static::forge('group');
 	 *
-	 * @param   string  Ftp filename
-	 * @param   array   array of values
+	 * @param   string|array  The name of the config group to use, or a configuration array.
+	 * @param   bool          Automatically connect to this server.
 	 * @return  Ftp
 	 */
-	public static function factory($config = 'default', $connect = true)
+	public static function forge($config = 'default', $connect = true)
 	{
 		$ftp = new static($config);
 
@@ -60,8 +60,8 @@ class Ftp
 	/**
 	 * Sets the initial Ftp filename and local data.
 	 *
-	 * @param   string  Ftp filename
-	 * @param   array   array of values
+	 * @param   string|array  The name of the config group to use, or a configuration array.
+	 * @param   bool          Automatically connect to this server.
 	 * @return  void
 	 */
 	public function __construct($config = 'default')

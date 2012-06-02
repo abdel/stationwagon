@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -14,7 +14,8 @@ namespace Fuel\Core;
 
 
 
-class File_Handler_File {
+class File_Handler_File
+{
 
 	/**
 	 * @var	string	path to the file
@@ -36,13 +37,13 @@ class File_Handler_File {
 	 */
 	protected $readonly = false;
 
-	protected function __construct($path, Array $config, File_Area $area, $content = array())
+	protected function __construct($path, array $config, File_Area $area, $content = array())
 	{
 		$this->path = $path;
 		$this->area = $area;
 	}
 
-	public static function factory($path, Array $config = array(), File_Area $area = null, $content = array())
+	public static function forge($path, array $config = array(), File_Area $area = null, $content = array())
 	{
 		$obj = new static($path, $config, \File::instance($area), $content);
 
@@ -91,7 +92,7 @@ class File_Handler_File {
 
 		$return =  $this->area->rename($this->path, $new_path);
 		$return and $this->path = $new_path;
-		
+
 		return $return;
 	}
 
@@ -110,7 +111,7 @@ class File_Handler_File {
 
 		$return = $this->area->rename($this->path, $new_path);
 		$return and $this->path = $new_path;
-		
+
 		return $return;
 	}
 
@@ -152,7 +153,7 @@ class File_Handler_File {
 		// should also destroy object but not possible in PHP right?
 		return $this->area->delete($this->path);
 	}
-	
+
 	/**
 	 * Get the url.
 	 *
@@ -162,7 +163,7 @@ class File_Handler_File {
 	{
 		return $this->area->get_url($this->path);
 	}
-	
+
 	/**
 	 * Get the file's permissions.
 	 *
@@ -172,7 +173,7 @@ class File_Handler_File {
 	{
 		return $this->area->get_permissions($this->path);
 	}
-	
+
 	/**
 	 * Get the file's created or modified timestamp.
 	 *
@@ -183,7 +184,7 @@ class File_Handler_File {
 	{
 		return $this->area->get_time($this->path, $type);
 	}
-	
+
 	/**
 	 * Get the file's size.
 	 *

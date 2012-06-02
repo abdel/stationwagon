@@ -6,14 +6,14 @@
  * @version		1.0
  * @author		Fuel Development Team
  * @license		MIT License
- * @copyright	2010 - 2011 Fuel Development Team
+ * @copyright	2010 - 2012 Fuel Development Team
  * @link		http://fuelphp.com
  */
 
 namespace Orm;
 
-abstract class Relation {
-
+abstract class Relation
+{
 	/**
 	 * @var  string  name of the relationship in the model_from
 	 */
@@ -137,11 +137,9 @@ abstract class Relation {
 	{
 		if (strncmp($property, '_', 1) == 0 or ! property_exists($this, $property))
 		{
-			throw new \Fuel_Exception('Invalid relation property: '.$property);
+			throw new \FuelException('Invalid relation property: '.$property);
 		}
 
 		return $this->{$property};
 	}
 }
-
-/* End of file relation.php */

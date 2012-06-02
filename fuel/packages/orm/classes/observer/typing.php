@@ -6,7 +6,7 @@
  * @version		1.0
  * @author		Fuel Development Team
  * @license		MIT License
- * @copyright	2010 - 2011 Fuel Development Team
+ * @copyright	2010 - 2012 Fuel Development Team
  * @link		http://fuelphp.com
  */
 
@@ -15,8 +15,8 @@ namespace Orm;
 // Invalid content exception, thrown when conversion is not possible
 class InvalidContentType extends \UnexpectedValueException {}
 
-class Observer_Typing {
-
+class Observer_Typing
+{
 	/**
 	 * @var  array  types of events to act on and whether they are pre- or post-database
 	 */
@@ -31,20 +31,21 @@ class Observer_Typing {
 	 */
 	public static $type_methods = array(
 		'/^varchar/uiD' => array(
-			'before' => 'Orm\\Observer_Typing::type_string'
+			'before' => 'Orm\\Observer_Typing::type_string',
 		),
 		'/^(tiny|small|medium|big)?int(eger)?/uiD'
 			=> 'Orm\\Observer_Typing::type_integer',
 		'/^(float|double|decimal)/uiD'
 			=> 'Orm\\Observer_Typing::type_float',
 		'/^(tiny|medium|long)?text/' => array(
-			'before' => 'Orm\\Observer_Typing::type_string'
+			'before' => 'Orm\\Observer_Typing::type_string',
 		),
 		'/^set/uiD' => array(
-			'before' => 'Orm\\Observer_Typing::type_set'
+			'before' => 'Orm\\Observer_Typing::type_set_before',
+			'after' => 'Orm\\Observer_Typing::type_set_after',
 		),
 		'/^enum/uiD' => array(
-			'before' => 'Orm\\Observer_Typing::type_set'
+			'before' => 'Orm\\Observer_Typing::type_set_before',
 		),
 		'/^bool(ean)?$/uiD' => array(
 			'before' => 'Orm\\Observer_Typing::type_bool_to_int',
@@ -57,6 +58,10 @@ class Observer_Typing {
 		'/^json$/uiD' => array(
 			'before' => 'Orm\\Observer_Typing::type_json_encode',
 			'after'  => 'Orm\\Observer_Typing::type_json_decode',
+		),
+		'/^time_(unix|mysql)$/' => array(
+			'before' => 'Orm\\Observer_Typing::type_time_encode',
+			'after'  => 'Orm\\Observer_Typing::type_time_decode',
 		),
 	);
 
@@ -109,6 +114,11 @@ class Observer_Typing {
 				}
 			}
 		}
+
+		if ($event_type == 'after')
+		{
+			$instance->_update_original();
+		}
 	}
 
 	/**
@@ -119,7 +129,7 @@ class Observer_Typing {
 	 * @param   array
 	 * @return  string
 	 */
-	public static function type_string($var, $settings)
+	public static function type_string($var, array $settings)
 	{
 		if (is_array($var) or (is_object($var) and ! method_exists($var, '__toString')))
 		{
@@ -148,7 +158,7 @@ class Observer_Typing {
 	 * @param   array
 	 * @return  int
 	 */
-	public static function type_integer($var, $settings)
+	public static function type_integer($var, array $settings)
 	{
 		if (is_array($var) or is_object($var))
 		{
@@ -172,7 +182,7 @@ class Observer_Typing {
 	 * @param   array
 	 * @return  float
 	 */
-	public static function type_float($var, $settings)
+	public static function type_float($var)
 	{
 		if (is_array($var) or is_object($var))
 		{
@@ -190,9 +200,9 @@ class Observer_Typing {
 	 * @param   array
 	 * @return  string
 	 */
-	public static function type_set($var, $settings)
+	public static function type_set_before($var, array $settings)
 	{
-		$var    = strval($var);
+		$var    = is_array($var) ? implode(',', $var) : strval($var);
 		$values = array_filter(explode(',', trim($var)));
 
 		if ($settings['data_type'] == 'enum' and count($values) > 1)
@@ -213,13 +223,24 @@ class Observer_Typing {
 	}
 
 	/**
+	 * Casts to string when necessary and checks if it's a valid value
+	 *
+	 * @param   string  value
+	 * @return  array
+	 */
+	public static function type_set_after($var)
+	{
+		return explode(',', $var);
+	}
+
+	/**
 	 * Converts boolean input to 1 or 0 for the DB
 	 *
 	 * @param   bool  value
 	 * @param   array
 	 * @return  int
 	 */
-	public static function type_bool_to_int($var, $settings)
+	public static function type_bool_to_int($var)
 	{
 		return $var ? 1 : 0;
 	}
@@ -244,7 +265,7 @@ class Observer_Typing {
 	 * @param   array
 	 * @return  string
 	 */
-	public static function type_serialize($var, $settings)
+	public static function type_serialize($var, array $settings)
 	{
 		$var = serialize($var);
 
@@ -279,7 +300,7 @@ class Observer_Typing {
 	 * @param   array
 	 * @return  string
 	 */
-	public static function type_json_encode($var, $settings)
+	public static function type_json_encode($var, array $settings)
 	{
 		$var = json_encode($var);
 
@@ -305,6 +326,44 @@ class Observer_Typing {
 	{
 		return json_decode($var);
 	}
-}
 
-// End of file typing.php
+	/**
+	 * Takes a Date instance and transforms it into a DB timestamp
+	 *
+	 * @param   \Fuel\Core\Date  $var
+	 * @param   array            $settings
+	 * @return  int|string
+	 * @throws  InvalidContentType
+	 */
+	public static function type_time_encode(\Fuel\Core\Date $var, array $settings)
+	{
+		if ( ! $var instanceof \Fuel\Core\Date)
+		{
+			throw new InvalidContentType('Value must be an instance of the Date class.');
+		}
+
+		if ($settings['data_type'] == 'time_mysql')
+		{
+			return $var->format('mysql');
+		}
+
+		return $var->get_timestamp();
+	}
+
+	/**
+	 * Takes a DB timestamp and converts it into a Date object
+	 *
+	 * @param   string  $var
+	 * @param   array   $settings
+	 * @return  \Fuel\Core\Date
+	 */
+	public static function type_time_decode($var, array $settings)
+	{
+		if ($settings['data_type'] == 'time_mysql')
+		{
+			return \Date::create_from_string($var, 'mysql');
+		}
+
+		return \Date::forge($var);
+	}
+}

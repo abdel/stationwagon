@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -14,7 +14,8 @@ namespace Fuel\Core;
 
 
 
-class File_Handler_Directory {
+class File_Handler_Directory
+{
 
 	/**
 	 * @var	string	path to the file
@@ -31,7 +32,7 @@ class File_Handler_Directory {
 	 */
 	protected $content = array();
 
-	protected function __construct($path, Array &$config, File_Area $area, $content = array())
+	protected function __construct($path, array &$config, File_Area $area, $content = array())
 	{
 		$this->path	= rtrim($path, '\\/').DS;
 		$this->area	= $area;
@@ -49,7 +50,7 @@ class File_Handler_Directory {
 		}
 	}
 
-	public static function factory($path, Array $config = array(), File_Area $area = null, $content = array())
+	public static function forge($path, array $config = array(), File_Area $area = null, $content = array())
 	{
 		return new static($path, $config, $area, $content);
 	}
@@ -79,10 +80,10 @@ class File_Handler_Directory {
 		$new_name = str_replace(array('..', '/', '\\'), array('', '', ''), $new_name);
 
 		$new_path = $info['dirname'].DS.$new_name;
-		
+
 		$return =  $this->area->rename_dir($this->path, $new_path);
 		$return and $this->path = $new_path;
-		
+
 		return $return;
 	}
 
@@ -101,7 +102,7 @@ class File_Handler_Directory {
 
 		$return =  $this->area->rename_dir($this->path, $new_path);
 		$return and $this->path = $new_path;
-		
+
 		return $return;
 	}
 
@@ -142,7 +143,7 @@ class File_Handler_Directory {
 		// should also destroy object but not possible in PHP right?
 		return $this->area->delete_dir($this->path, $recursive, $delete_top);
 	}
-	
+
 	/**
 	 * Get the url.
 	 *
@@ -152,7 +153,7 @@ class File_Handler_Directory {
 	{
 		throw new \BadMethodCallException('Get_url method is unavailable on directories.');
 	}
-	
+
 	/**
 	 * Get the directory permissions.
 	 *
@@ -162,7 +163,7 @@ class File_Handler_Directory {
 	{
 		return $this->area->get_permissions($this->path);
 	}
-	
+
 	/**
 	 * Get directory's the created or modified timestamp.
 	 *
@@ -173,7 +174,7 @@ class File_Handler_Directory {
 	{
 		return $this->area->get_time($this->path, $type);
 	}
-	
+
 	/**
 	 * Get the size.
 	 *

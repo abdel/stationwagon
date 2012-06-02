@@ -6,7 +6,7 @@
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -18,12 +18,12 @@ return array(
 	 *
 	 * You can set this to a full or relative URL:
 	 *
-	 *     'base_url' => '/foo',
+	 *     'base_url' => '/foo/',
 	 *     'base_url' => 'http://foo.com/'
 	 *
 	 * Set this to null to have it automatically detected.
 	 */
-	'base_url'		=> null,
+	'base_url'  => null,
 
 	/**
 	 * url_suffix - Any suffix that needs to be added to
@@ -34,47 +34,50 @@ return array(
 	 *
 	 * Set this to an empty string if no suffix is used
 	 */
-	'url_suffix'		=> '',
+	'url_suffix'  => '',
 
 	/**
 	 * index_file - The name of the main bootstrap file.
 	 *
 	 * Set this to false or remove if you using mod_rewrite.
 	 */
-	'index_file'	=> false,
+	'index_file'  => 'index.php',
+
+	'profiling'  => false,
 
 	/**
-	 * Your environment.  Can be set to any of the following:
-	 *
-	 * Fuel::DEVELOPMENT
-	 * Fuel::TEST
-	 * Fuel::STAGE
-	 * Fuel::PRODUCTION
+	 * Default location for the file cache
 	 */
-	'environment'	=> (isset($_SERVER['FUEL_ENV']) ? $_SERVER['FUEL_ENV'] : Fuel::DEVELOPMENT),
+	'cache_dir'       => APPPATH.'cache/',
 
-	'profiling'		=> false,
+	/**
+	 * Setttings for the file finder cache (the Cache class has it's own config!)
+	 */
+	'caching'         => false,
+	'cache_lifetime'  => 3600, // In Seconds
 
-	'caching'			=> false,
-	'cache_dir'			=> APPPATH.'cache/',
-	'cache_lifetime'	=> 3600, // In Seconds
+	/**
+	 * Callback to use with ob_start(), set this to 'ob_gzhandler' for gzip encoding of output
+	 */
+	'ob_callback'  => null,
 
 	'errors'  => array(
-
 		// Which errors should we show, but continue execution?
 		'continue_on'  => array(E_NOTICE, E_WARNING, E_DEPRECATED, E_STRICT),
-
 		// How many errors should we show before we stop showing them? (prevents out-of-memory errors)
 		'throttle'     => 10,
-
+		// Should notices from Error::notice() be shown?
 		'notices'      => true,
 	),
 
-	'language'		=> 'en',
+	/**
+	 * Localization & internationalization settings
+	 */
+	'language'           => 'en', // Default language
+	'language_fallback'  => 'en', // Fallback language when file isn't available for default language
+	'locale'             => 'en_US', // PHP set_locale() setting, null to not set
 
-	'locale'		=> 'en_US',
-
-	'encoding'		=> 'UTF-8',
+	'encoding'  => 'UTF-8',
 
 	/**
 	 * DateTime settings
@@ -82,31 +85,31 @@ return array(
 	 * server_gmt_offset	in seconds the server offset from gmt timestamp when time() is used
 	 * default_timezone		optional, if you want to change the server's default timezone
 	 */
-	'server_gmt_offset'	=> 0,
-
-	'default_timezone'	=> 'UTC',
+	'server_gmt_offset'  => 0,
+	'default_timezone'   => 'UTC',
 
 	/**
 	 * Logging Threshold.  Can be set to any of the following:
 	 *
 	 * Fuel::L_NONE
 	 * Fuel::L_ERROR
+	 * Fuel::L_WARNING
 	 * Fuel::L_DEBUG
 	 * Fuel::L_INFO
 	 * Fuel::L_ALL
 	 */
-	'log_threshold'		=> Fuel::L_ERROR,
-	'log_path'			=> APPPATH.'logs/',
-	'log_date_format' 	=> 'Y-m-d H:i:s',
+	'log_threshold'    => Fuel::L_WARNING,
+	'log_path'         => APPPATH.'logs/',
+	'log_date_format'  => 'Y-m-d H:i:s',
 
 	/**
 	 * Security settings
 	 */
 	'security' => array(
-		'csrf_autoload'			=> false,
-		'csrf_token_key'		=> 'fuel_csrf_token',
-		'csrf_expiration'		=> 0,
-		'uri_filter'			=> array('htmlentities'),
+		'csrf_autoload'    => false,
+		'csrf_token_key'   => 'fuel_csrf_token',
+		'csrf_expiration'  => 0,
+		'uri_filter'       => array('htmlentities'),
 
 		/**
 		 * This input filter can be any normal PHP function as well as 'xss_clean'
@@ -114,49 +117,68 @@ return array(
 		 * WARNING: Using xss_clean will cause a performance hit.  How much is
 		 * dependant on how much input data there is.
 		 */
-		'input_filter'			=> array(),
+		'input_filter'  => array(),
 
 		/**
-		 * Whether to automatically encode (htmlentities) view data
+		 * This output filter can be any normal PHP function as well as 'xss_clean'
+		 *
+		 * WARNING: Using xss_clean will cause a performance hit.  How much is
+		 * dependant on how much input data there is.
 		 */
-		'auto_encode_view_data'	=> true,
+		'output_filter'  => array('Security::htmlentities'),
+
+		/**
+		 * Whether to automatically filter view data
+		 */
+		'auto_filter_output'  => true,
 
 		/**
 		 * With output encoding switched on all objects passed will be converted to strings or
 		 * throw exceptions unless they are instances of the classes in this array.
 		 */
-		'whitelisted_classes' => array('stdClass', 'Fuel\\Core\\View', 'Fuel\\Core\\ViewModel', 'Closure')
+		'whitelisted_classes' => array(
+			'Fuel\\Core\\Response',
+			'Fuel\\Core\\View',
+			'Fuel\\Core\\ViewModel',
+			'Closure',
+		)
 	),
 
 	/**
 	 * Cookie settings
 	 */
 	'cookie' => array(
+		// Number of seconds before the cookie expires
+		'expiration'  => 0,
+		// Restrict the path that the cookie is available to
+		'path'        => '/',
+		// Restrict the domain that the cookie is available to
+		'domain'      => null,
+		// Only transmit cookies over secure connections
+		'secure'      => false,
+		// Only transmit cookies over HTTP, disabling Javascript access
+		'http_only'   => false,
+	),
 
+	/**
+	 * Validation settings.
+	 */
+	'validation' => array(
 		/**
-		 * Number of seconds before the cookie expires
+		 * Wether to fallback to global when a
+		 *value is not found in the input array.
 		 */
-		'expiration'            => 0,
+		'global_input_fallback' => true,
+	),
 
+	/**
+	 * Routing settings.
+	 */
+	'routing' => array(
 		/**
-		 * Restrict the path that the cookie is available to
+		 * Whether URI routing is case sensitive or not
 		 */
-		'path'                  => '/',
-
-		/**
-		 * Restrict the domain that the cookie is available to
-		 */
-		'domain'                => null,
-
-		/**
-		 * Only transmit cookies over secure connections
-		 */
-		'secure'                => false,
-
-		/**
-		 * Only transmit cookies over HTTP, disabling Javascript access
-		 */
-		'http_only'             => false,
+		'case_sensitive' => true,
 	),
 
 	/**
@@ -174,8 +196,7 @@ return array(
 	/**************************************************************************/
 	/* Always Load                                                            */
 	/**************************************************************************/
-
-	'always_load'	=> array(
+	'always_load'  => array(
 
 		/**
 		 * These packages are loaded on Fuel's startup.  You can specify them in
@@ -188,9 +209,9 @@ return array(
 		 *     array('auth'	=> PKGPATH.'auth/')
 		 * );
 		 */
-		'packages'	=> array(
-            'orm',
-            'auth',
+		'packages'  => array(
+			'orm',
+			'auth',
 		),
 
 		/**
@@ -201,12 +222,12 @@ return array(
 		 *
 		 * A path must be set in module_paths for this to work.
 		 */
-		'modules'	=> array(),
+		'modules'  => array(),
 
 		/**
 		 * Classes to autoload & initialize even when not used
 		 */
-		'classes'	=> array(),
+		'classes'  => array(),
 
 		/**
 		 * Configs to autoload
@@ -216,7 +237,7 @@ return array(
 		 * add it like 'session' => 'auth'.
 		 * If you don't want the config in a group use null as groupname.
 		 */
-		'config'	=> array(),
+		'config'  => array(),
 
 		/**
 		 * Language files to autoload
@@ -226,7 +247,7 @@ return array(
 		 * add it like 'validation' => 'forms'.
 		 * If you don't want the lang in a group use null as groupname.
 		 */
-		'language'	=> array(),
+		'language'  => array(),
 	),
 
 );

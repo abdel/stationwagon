@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -14,7 +14,8 @@ namespace Fuel\Core;
 
 
 
-class File_Area {
+class File_Area
+{
 
 	/**
 	 * @var	string	path to basedir restriction, null for no restriction
@@ -41,7 +42,7 @@ class File_Area {
 	 */
 	protected $file_handlers = array();
 
-	protected function __construct(Array $config = array())
+	protected function __construct(array $config = array())
 	{
 		foreach ($config as $key => $value)
 		{
@@ -63,7 +64,7 @@ class File_Area {
 	 * @param	array
 	 * @return	File_Area
 	 */
-	public static function factory(Array $config = array())
+	public static function forge(array $config = array())
 	{
 		return new static($config);
 	}
@@ -76,7 +77,7 @@ class File_Area {
 	 * @return	File_Handler_File
 	 * @throws	FileAccessException		when outside basedir restriction or disallowed file extension
 	 */
-	public function get_handler($path, Array $config = array(), $content = array())
+	public function get_handler($path, array $config = array(), $content = array())
 	{
 		$path = $this->get_path($path);
 
@@ -95,14 +96,14 @@ class File_Area {
 			if (array_key_exists($info['extension'], $this->file_handlers))
 			{
 				$class = '\\'.ltrim($this->file_handlers[$info['extension']], '\\');
-				return $class::factory($path, $config, $this);
+				return $class::forge($path, $config, $this);
 			}
 
-			return \File_Handler_File::factory($path, $config, $this);
+			return \File_Handler_File::forge($path, $config, $this);
 		}
 		elseif (is_dir($path))
 		{
-			return \File_Handler_Directory::factory($path, $config, $this, $content);
+			return \File_Handler_Directory::forge($path, $config, $this, $content);
 		}
 
 		// still here? path is invalid
@@ -138,32 +139,34 @@ class File_Area {
 	 */
 	public function get_path($path)
 	{
+
+		$pathinfo = is_dir($path) ? array('dirname' => $path, 'extension' => null, 'basename' => '') : pathinfo($path);
+
 		// do we have a basedir, and is the path already prefixed by the basedir? then just deal with the double dots...
-		if ( ! empty($this->basedir) && substr($path, 0, strlen($this->basedir)) == $this->basedir)
+		if ( ! empty($this->basedir) && substr($pathinfo['dirname'], 0, strlen($this->basedir)) == $this->basedir)
 		{
-			$path = realpath($path);
+			$pathinfo['dirname'] = realpath($pathinfo['dirname']);
 		}
 		else
 		{
 			// attempt to get the realpath(), otherwise just use path with any double dots taken out when basedir is set (for security)
-			$path = ( ! empty($this->basedir) ? realpath($this->basedir.DS.$path) : realpath($path) )
-					?: ( ! empty($this->basedir) ? $this->basedir.DS.str_replace('..', '', $path) : $path);
+			$pathinfo['dirname'] = ( ! empty($this->basedir) ? realpath($this->basedir.DS.$pathinfo['dirname']) : realpath($pathinfo['dirname']) )
+					?: ( ! empty($this->basedir) ? $this->basedir.DS.str_replace('..', '', $pathinfo['dirname']) : $pathinfo['dirname']);
 		}
 
 		// basedir prefix is required when it is set (may cause unexpected errors when realpath doesn't work)
-		if ( ! empty($this->basedir) && substr($path, 0, strlen($this->basedir)) != $this->basedir)
+		if ( ! empty($this->basedir) && substr($pathinfo['dirname'], 0, strlen($this->basedir)) != $this->basedir)
 		{
 			throw new \OutsideAreaException('File operation not allowed: given path is outside the basedir for this area.');
 		}
 
 		// check file extension
-		$info = pathinfo($path);
-		if ( ! empty(static::$extensions) && array_key_exists($info['extension'], static::$extensions))
+		if ( ! empty(static::$extensions) && array_key_exists($pathinfo['extension'], static::$extensions))
 		{
 			throw new \FileAccessException('File operation not allowed: disallowed file extension.');
 		}
 
-		return $path;
+		return $pathinfo['dirname'].DS.$pathinfo['basename'];
 	}
 
 	/**
@@ -202,7 +205,7 @@ class File_Area {
 		return \File::create($basepath, $name, $contents, $this);
 	}
 
-	public function create_dir($basepath, $name, $chmod = 0777)
+	public function create_dir($basepath, $name, $chmod = null)
 	{
 		return \File::create_dir($basepath, $name, $chmod, $this);
 	}

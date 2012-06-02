@@ -15,7 +15,8 @@ namespace Fuel\Core;
 
 
 
-abstract class Database_Connection {
+abstract class Database_Connection
+{
 
 	/**
 	 * @var  string  default instance name
@@ -40,12 +41,12 @@ abstract class Database_Connection {
 	 *
 	 * @param   string   instance name
 	 * @param   array    configuration parameters
-	 * @return  Database
+	 * @return  Database_Connection
 	 */
-	public static function instance($name = NULL, array $config = NULL)
+	public static function instance($name = null, array $config = null)
 	{
 		\Config::load('db', true);
-		if ($name === NULL)
+		if ($name === null)
 		{
 			// Use the default instance name
 			$name = \Config::get('db.active');
@@ -53,7 +54,7 @@ abstract class Database_Connection {
 
 		if ( ! isset(static::$instances[$name]))
 		{
-			if ($config === NULL)
+			if ($config === null)
 			{
 				// Load the configuration for this database
 				$config = \Config::get("db.{$name}");
@@ -61,11 +62,11 @@ abstract class Database_Connection {
 
 			if ( ! isset($config['type']))
 			{
-				throw new \Fuel_Exception("Database type not defined in {$name} configuration");
+				throw new \FuelException("Database type not defined in {$name} configuration");
 			}
 
 			// Set the driver class name
-			$driver = 'Fuel\\Core\\Database_'.ucfirst($config['type']).'_Connection';
+			$driver = '\\Database_' . ucfirst($config['type']) . '_Connection';
 
 			// Create the database connection instance
 			new $driver($name, $config);
@@ -79,16 +80,24 @@ abstract class Database_Connection {
 	 */
 	public $last_query;
 
-	// Character that is used to quote identifiers
+	/**
+	 * @var  string  Character that is used to quote identifiers
+	 */
 	protected $_identifier = '"';
 
-	// Instance name
+	/**
+	 * @var  string  Instance name
+	 */
 	protected $_instance;
 
-	// Raw server connection
+	/**
+	 * @var  resource  Raw server connection
+	 */
 	protected $_connection;
 
-	// Configuration array
+	/**
+	 * @var  array  Configuration array
+	 */
 	protected $_config;
 
 	/**
@@ -173,14 +182,14 @@ abstract class Database_Connection {
 	 * Perform an SQL query of the given type.
 	 *
 	 *     // Make a SELECT query and use objects for results
-	 *     $db->query(static::SELECT, 'SELECT * FROM groups', TRUE);
+	 *     $db->query(static::SELECT, 'SELECT * FROM groups', true);
 	 *
 	 *     // Make a SELECT query and use "Model_User" for the results
 	 *     $db->query(static::SELECT, 'SELECT * FROM users LIMIT 1', 'Model_User');
 	 *
 	 * @param   integer  static::SELECT, static::INSERT, etc
 	 * @param   string   SQL query
-	 * @param   mixed    result object class, TRUE for stdClass, FALSE for assoc array
+	 * @param   mixed    result object class, true for stdClass, false for assoc array
 	 * @return  object   Database_Result for SELECT queries
 	 * @return  array    list (insert id, row count) for INSERT queries
 	 * @return  integer  number of affected rows for all other queries
@@ -202,16 +211,16 @@ abstract class Database_Connection {
 			$sql = trim($sql);
 			if (stripos($sql, 'SELECT') !== 0)
 			{
-				return FALSE;
+				return false;
 			}
 
-			if (stripos($sql, 'LIMIT') !== FALSE)
+			if (stripos($sql, 'LIMIT') !== false)
 			{
 				// Remove LIMIT from the SQL
 				$sql = preg_replace('/\sLIMIT\s+[^a-z]+/i', ' ', $sql);
 			}
 
-			if (stripos($sql, 'OFFSET') !== FALSE)
+			if (stripos($sql, 'OFFSET') !== false)
 			{
 				// Remove OFFSET from the SQL
 				$sql = preg_replace('/\sOFFSET\s+\d+/i', '', $sql);
@@ -223,14 +232,30 @@ abstract class Database_Connection {
 				\DB::SELECT,
 				'SELECT COUNT(*) AS '.$this->quote_identifier('total_rows').' '.
 				'FROM ('.$sql.') AS '.$this->quote_table('counted_results'),
-				TRUE
+				true
 			);
 
 			// Return the total number of rows from the query
 			return (int) $result->current()->total_rows;
 		}
 
-		return FALSE;
+		return false;
+	}
+
+	/**
+	 * Per connection cache controlle setter/getter
+	 *
+	 * @param   bool   $bool  wether to enable it [optional]
+	 * @return  mixed  cache boolean when getting, current instance when setting.
+	 */
+	public function caching($bool = null)
+	{
+		if (is_bool($bool))
+		{
+			$this->_config['enable_cache'] = $bool;
+			return $this;
+		}
+		return \Arr::get($this->_config, 'enable_cache', true);
 	}
 
 	/**
@@ -247,7 +272,7 @@ abstract class Database_Connection {
 		// Quote the table name
 		$table = $this->quote_table($table);
 
-		return $this->query(\DB::SELECT, 'SELECT COUNT(*) AS total_row_count FROM '.$table, FALSE)
+		return $this->query(\DB::SELECT, 'SELECT COUNT(*) AS total_row_count FROM '.$table, false)
 			->get('total_row_count');
 	}
 
@@ -264,27 +289,27 @@ abstract class Database_Connection {
 		static $types = array
 		(
 			// SQL-92
-			'bit'                           => array('type' => 'string', 'exact' => TRUE),
+			'bit'                           => array('type' => 'string', 'exact' => true),
 			'bit varying'                   => array('type' => 'string'),
-			'char'                          => array('type' => 'string', 'exact' => TRUE),
+			'char'                          => array('type' => 'string', 'exact' => true),
 			'char varying'                  => array('type' => 'string'),
-			'character'                     => array('type' => 'string', 'exact' => TRUE),
+			'character'                     => array('type' => 'string', 'exact' => true),
 			'character varying'             => array('type' => 'string'),
 			'date'                          => array('type' => 'string'),
-			'dec'                           => array('type' => 'float', 'exact' => TRUE),
-			'decimal'                       => array('type' => 'float', 'exact' => TRUE),
+			'dec'                           => array('type' => 'float', 'exact' => true),
+			'decimal'                       => array('type' => 'float', 'exact' => true),
 			'double precision'              => array('type' => 'float'),
 			'float'                         => array('type' => 'float'),
 			'int'                           => array('type' => 'int', 'min' => '-2147483648', 'max' => '2147483647'),
 			'integer'                       => array('type' => 'int', 'min' => '-2147483648', 'max' => '2147483647'),
 			'interval'                      => array('type' => 'string'),
-			'national char'                 => array('type' => 'string', 'exact' => TRUE),
+			'national char'                 => array('type' => 'string', 'exact' => true),
 			'national char varying'         => array('type' => 'string'),
-			'national character'            => array('type' => 'string', 'exact' => TRUE),
+			'national character'            => array('type' => 'string', 'exact' => true),
 			'national character varying'    => array('type' => 'string'),
-			'nchar'                         => array('type' => 'string', 'exact' => TRUE),
+			'nchar'                         => array('type' => 'string', 'exact' => true),
 			'nchar varying'                 => array('type' => 'string'),
-			'numeric'                       => array('type' => 'float', 'exact' => TRUE),
+			'numeric'                       => array('type' => 'float', 'exact' => true),
 			'real'                          => array('type' => 'float'),
 			'smallint'                      => array('type' => 'int', 'min' => '-32768', 'max' => '32767'),
 			'time'                          => array('type' => 'string'),
@@ -294,8 +319,8 @@ abstract class Database_Connection {
 			'varchar'                       => array('type' => 'string'),
 
 			// SQL:1999
-			'binary large object'               => array('type' => 'string', 'binary' => TRUE),
-			'blob'                              => array('type' => 'string', 'binary' => TRUE),
+			'binary large object'               => array('type' => 'string', 'binary' => true),
+			'blob'                              => array('type' => 'string', 'binary' => true),
 			'boolean'                           => array('type' => 'bool'),
 			'char large object'                 => array('type' => 'string'),
 			'character large object'            => array('type' => 'string'),
@@ -310,9 +335,9 @@ abstract class Database_Connection {
 			'bigint'    => array('type' => 'int', 'min' => '-9223372036854775808', 'max' => '9223372036854775807'),
 
 			// SQL:2008
-			'binary'            => array('type' => 'string', 'binary' => TRUE, 'exact' => TRUE),
-			'binary varying'    => array('type' => 'string', 'binary' => TRUE),
-			'varbinary'         => array('type' => 'string', 'binary' => TRUE),
+			'binary'            => array('type' => 'string', 'binary' => true, 'exact' => true),
+			'binary varying'    => array('type' => 'string', 'binary' => true),
+			'varbinary'         => array('type' => 'string', 'binary' => true),
 		);
 
 		if (isset($types[$type]))
@@ -334,7 +359,7 @@ abstract class Database_Connection {
 	 * @param   string   table to search for
 	 * @return  array
 	 */
-	abstract public function list_tables($like = NULL);
+	abstract public function list_tables($like = null);
 
 	/**
 	 * Lists all of the columns in a table. Optionally, a LIKE string can be
@@ -350,7 +375,7 @@ abstract class Database_Connection {
 	 * @param   string  column to search for
 	 * @return  array
 	 */
-	abstract public function list_columns($table, $like = NULL);
+	abstract public function list_columns($table, $like = null);
 
 	/**
 	 * Extracts the text between parentheses, if any.
@@ -363,10 +388,10 @@ abstract class Database_Connection {
 	 */
 	protected function _parse_type($type)
 	{
-		if (($open = strpos($type, '(')) === FALSE)
+		if (($open = strpos($type, '(')) === false)
 		{
 			// No length specified
-			return array($type, NULL);
+			return array($type, null);
 		}
 
 		// Closing parenthesis
@@ -401,7 +426,7 @@ abstract class Database_Connection {
 	/**
 	 * Quote a value for an SQL query.
 	 *
-	 *     $db->quote(NULL);   // 'NULL'
+	 *     $db->quote(null);   // 'null'
 	 *     $db->quote(10);     // 10
 	 *     $db->quote('fred'); // 'fred'
 	 *
@@ -416,15 +441,15 @@ abstract class Database_Connection {
 	 */
 	public function quote($value)
 	{
-		if ($value === NULL)
+		if ($value === null)
 		{
-			return 'NULL';
+			return 'null';
 		}
-		elseif ($value === TRUE)
+		elseif ($value === true)
 		{
 			return "'1'";
 		}
-		elseif ($value === FALSE)
+		elseif ($value === false)
 		{
 			return "'0'";
 		}
@@ -595,12 +620,12 @@ abstract class Database_Connection {
 			return $this->quote_identifier($value).' AS '.$this->quote_identifier($alias);
 		}
 
-		if (strpos($value, '"') !== FALSE)
+		if (strpos($value, '"') !== false)
 		{
 			// Quote the column in FUNC("ident") identifiers
 			return preg_replace('/"(.+?)"/e', '$this->quote_identifier("$1")', $value);
 		}
-		elseif (strpos($value, '.') !== FALSE)
+		elseif (strpos($value, '.') !== false)
 		{
 			// Split the identifier into the individual parts
 			$parts = explode('.', $value);
@@ -636,24 +661,18 @@ abstract class Database_Connection {
 	abstract public function escape($value);
 
 	/**
-	 * Sets the Database instance to use transactions
-	 * Transactions are OFF by default
+	 * Whether or not the connection is in transaction mode
 	 *
-	 *     $db->transactional();
-	 *     $db->transactional(TRUE);
-	 *     $db->transactional(FALSE);
-	 *
-	 * @param   bool   use tranactions TRUE/FALSE
-	 * @return  void
+	 * @return  bool
 	 */
-	abstract public function transactional($use_trans = TRUE);
+	abstract public function in_transaction();
 
 	/**
 	 * Begins a transaction on instance
 	 *
 	 *     $db->start_transaction();
 	 *
-	 * @return  void
+	 * @return  bool
 	 */
 	abstract public function start_transaction();
 
@@ -662,7 +681,7 @@ abstract class Database_Connection {
 	 *
 	 *     $db->commit_transaction();
 	 *
-	 * @return  void
+	 * @return  bool
 	 */
 	abstract public function commit_transaction();
 
@@ -671,8 +690,19 @@ abstract class Database_Connection {
 	 *
 	 *     $db->rollback_transaction();
 	 *
-	 * @return  void
+	 * @return  bool
 	 */
 	abstract public function rollback_transaction();
 
-} // End Database_Connection
+	/**
+	 * Returns the raw connection object for custom method access
+	 *
+	 *     $db->connection()->lastInsertId('id');
+	 *
+	 * @return  resource
+	 */
+	public function connection()
+	{
+		return $this->_connection;
+	}
+}

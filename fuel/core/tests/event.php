@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -14,15 +14,16 @@ namespace Fuel\Core;
 
 /**
  * Event class tests
- * 
+ *
  * @group Core
  * @group Event
  */
-class Test_Event extends TestCase {
-	
+class Test_Event extends TestCase
+{
+
 	/**
 	 * Test for Event::register()
-	 * 
+	 *
 	 * @test
 	 */
 	public function test_register_valid()
@@ -30,10 +31,10 @@ class Test_Event extends TestCase {
 		$output = Event::register('test_register_valid', 'Str::upper');
 		$this->assertTrue($output);
 	}
-	
+
 	/**
 	 * Test for Event::has_events()
-	 * 
+	 *
 	 * @test
 	 */
 	public function test_hasevents_valid()
@@ -41,10 +42,10 @@ class Test_Event extends TestCase {
 		$output = Event::has_events('test_register_valid');
 		$this->assertTrue($output);
 	}
-	
+
 	/**
 	 * Test for Event::trigger()
-	 * 
+	 *
 	 * @test
 	 */
 	public function test_trigger_valid()
@@ -52,10 +53,10 @@ class Test_Event extends TestCase {
 		$output = Event::trigger('test_register_valid', 'text to upper');
 		$this->assertEquals('TEXT TO UPPER', $output);
 	}
-	
+
 	/**
 	 * Test for Event::register()
-	 * 
+	 *
 	 * @test
 	 */
 	public function test_register_invalid()
@@ -63,10 +64,10 @@ class Test_Event extends TestCase {
 		$output = Event::register('test_register_invalid', 'Imaginary::callback');
 		$this->assertFalse($output);
 	}
-	
+
 	/**
 	 * Test for Event::has_events()
-	 * 
+	 *
 	 * @test
 	 */
 	public function test_hasevents_invalid()
@@ -74,10 +75,10 @@ class Test_Event extends TestCase {
 		$output = Event::has_events('test_register_invalid');
 		$this->assertFalse($output);
 	}
-	
+
 	/**
 	 * Test for Event::trigger()
-	 * 
+	 *
 	 * @test
 	 */
 	public function test_trigger_invalid()

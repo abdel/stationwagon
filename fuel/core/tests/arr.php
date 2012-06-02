@@ -1,12 +1,12 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
@@ -18,7 +18,8 @@ namespace Fuel\Core;
  * @group Core
  * @group Arr
  */
-class Tests_Arr extends TestCase {
+class Test_Arr extends TestCase
+{
 
 	public static function person_provider()
 	{
@@ -73,113 +74,152 @@ class Tests_Arr extends TestCase {
 	}
 
 	/**
-	 * Tests Arr::element()
+	 * Tests Arr::key_exists()
 	 *
 	 * @test
 	 * @dataProvider person_provider
 	 */
-	public function test_element_with_element_found($person)
+	public function test_key_exists_with_key_found($person)
+	{
+		$expected = true;
+		$output = Arr::key_exists($person, "name");
+		$this->assertEquals($expected, $output);
+	}
+
+	/**
+	 * Tests Arr::key_exists()
+	 *
+	 * @test
+	 * @dataProvider person_provider
+	 */
+	public function test_key_exists_with_key_not_found($person)
+	{
+		$expected = false;
+		$output = Arr::key_exists($person, "unknown");
+		$this->assertEquals($expected, $output);
+	}
+
+	/**
+	 * Tests Arr::key_exists()
+	 *
+	 * @test
+	 * @dataProvider person_provider
+	 */
+	public function test_key_exists_with_dot_separated_key($person)
+	{
+		$expected = true;
+		$output = Arr::key_exists($person, "location.city");
+		$this->assertEquals($expected, $output);
+	}
+
+	/**
+	 * Tests Arr::get()
+	 *
+	 * @test
+	 * @dataProvider person_provider
+	 */
+	public function test_get_with_element_found($person)
 	{
 		$expected = "Jack";
-		$output = Arr::element($person, "name", "Unknown Name");
+		$output = Arr::get($person, "name", "Unknown Name");
 		$this->assertEquals($expected, $output);
 	}
 
 	/**
-	 * Tests Arr::element()
+	 * Tests Arr::get()
 	 *
 	 * @test
 	 * @dataProvider person_provider
 	 */
-	public function test_element_with_element_not_found($person)
+	public function test_get_with_element_not_found($person)
 	{
 		$expected = "Unknown job";
-		$output = Arr::element($person, "job", "Unknown job");
+		$output = Arr::get($person, "job", "Unknown job");
 		$this->assertEquals($expected, $output);
 	}
 
 	/**
-	 * Tests Arr::element()
+	 * Tests Arr::get()
 	 *
 	 * @test
 	 * @dataProvider person_provider
 	 */
-	public function test_element_with_dot_separated_key($person)
+	public function test_get_with_dot_separated_key($person)
 	{
 		$expected = "Pittsburgh";
-		$output = Arr::element($person, "location.city", "Unknown City");
+		$output = Arr::get($person, "location.city", "Unknown City");
 		$this->assertEquals($expected, $output);
 
 	}
 
 	/**
-	 * Tests Arr::element()
+	 * Tests Arr::get()
 	 *
 	 * @test
+	 * @expectedException InvalidArgumentException
 	 */
-	public function test_element_when_array_is_not_an_array()
+	public function test_get_throws_exception_when_array_is_not_an_array()
 	{
-		$expected = "Unknown Name";
-		$output = Arr::element('Jack', 'name', 'Unknown Name');
-		$this->assertEquals($expected, $output);
+		$output = Arr::get('Jack', 'name', 'Unknown Name');
 	}
 
 	/**
-	 * Tests Arr::element()
+	 * Tests Arr::get()
 	 *
 	 * @test
 	 * @dataProvider person_provider
 	 */
-	public function test_element_when_dot_notated_key_is_not_array($person)
+	public function test_get_when_dot_notated_key_is_not_array($person)
 	{
 		$expected = "Unknown Name";
-		$output = Arr::element($person, 'foo.first', 'Unknown Name');
+		$output = Arr::get($person, 'foo.first', 'Unknown Name');
 		$this->assertEquals($expected, $output);
 	}
 
 	/**
-	 * Tests Arr::elements()
+	 * Tests Arr::get()
 	 *
 	 * @test
 	 * @dataProvider person_provider
 	 */
-	public function test_elements_with_all_elements_found($person)
+	public function test_get_with_all_elements_found($person)
 	{
 		$expected = array(
 			'name' => 'Jack',
 			'weight' => 200,
 		);
-		$output = Arr::elements($person, array('name', 'weight'), 'Unknown');
+		$output = Arr::get($person, array('name', 'weight'), 'Unknown');
 		$this->assertEquals($expected, $output);
 	}
 
 
 	/**
-	 * Tests Arr::elements()
+	 * Tests Arr::get()
 	 *
 	 * @test
 	 * @dataProvider person_provider
 	 */
-	public function test_elements_with_all_elements_not_found($person)
+	public function test_get_with_all_elements_not_found($person)
 	{
 		$expected = array(
 			'name' => 'Jack',
 			'height' => 'Unknown',
 		);
-		$output = Arr::elements($person, array('name', 'height'), 'Unknown');
+		$output = Arr::get($person, array('name', 'height'), 'Unknown');
 		$this->assertEquals($expected, $output);
 	}
 
 	/**
-	 * Tests Arr::elements()
+	 * Tests Arr::get()
 	 *
 	 * @test
 	 * @dataProvider person_provider
-	 * @expectedException InvalidArgumentException
 	 */
-	public function test_elements_throws_exception_when_keys_is_not_an_array($person)
+	public function test_get_when_keys_is_not_an_array($person)
 	{
-		$output = Arr::elements($person, 'name', 'Unknown');
+		$expected = 'Jack';
+		$output = Arr::get($person, 'name', 'Unknown');
+		$this->assertEquals($expected, $output);
 	}
 
 	/**
@@ -337,7 +377,7 @@ class Tests_Arr extends TestCase {
 	}
 
 	/**
-	 * Tests Arr::element()
+	 * Tests Arr::filter_prefixed()
 	 *
 	 * @test
 	 */
@@ -452,6 +492,13 @@ class Tests_Arr extends TestCase {
 		$this->assertEquals(Arr::sort($data, 'info.pet.type', 'downer'), $expected);
 	}
 
+	public function test_sort_empty()
+	{
+		$expected = array();
+		$output = Arr::sort(array(), 'test', 'test');
+		$this->assertEquals($expected, $output);
+	}
+
 	/**
 	 * Tests Arr::filter_keys()
 	 *
@@ -492,12 +539,52 @@ class Tests_Arr extends TestCase {
 	 * Tests Arr::to_assoc()
 	 *
 	 * @test
+	 * @expectedException BadMethodCallException
 	 */
 	public function test_to_assoc_with_odd_number_of_elements()
 	{
 		$arr = array('foo', 'bar', 'baz');
-		$expected = null;
-		$this->assertEquals($expected, Arr::to_assoc($arr));
+		Arr::to_assoc($arr);
+	}
+
+	/**
+	 * Tests Arr::prepend()
+	 *
+	 * @test
+	 */
+	public function test_prepend()
+	{
+		$arr = array(
+			'two' => 2,
+			'three' => 3,
+		);
+		$expected = array(
+			'one' => 1,
+			'two' => 2,
+			'three' => 3,
+		);
+		Arr::prepend($arr, 'one', 1);
+		$this->assertEquals($expected, $arr);
+	}
+
+	/**
+	 * Tests Arr::prepend()
+	 *
+	 * @test
+	 */
+	public function test_prepend_array()
+	{
+		$arr = array(
+			'two' => 2,
+			'three' => 3,
+		);
+		$expected = array(
+			'one' => 1,
+			'two' => 2,
+			'three' => 3,
+		);
+		Arr::prepend($arr, array('one' => 1));
+		$this->assertEquals($expected, $arr);
 	}
 }
 

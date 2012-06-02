@@ -1,9 +1,6 @@
 <?php
 /**
- * Fuel
- *
- * Fuel is a fast, lightweight, community driven PHP5 framework.
- *
+ * Part of the Fuel framework. *
  * @package		Fuel
  * @version		1.0
  * @author		Fuel Development Team
@@ -27,10 +24,11 @@ namespace Fuel\Core;
  */
 
 
-class Mongo_DbException extends Fuel_Exception {}
+class Mongo_DbException extends \FuelException {}
 
 
-class Mongo_Db {
+class Mongo_Db
+{
 
 	/**
 	 * Holds the current Mongo connection object
@@ -113,7 +111,7 @@ class Mongo_Db {
 		{
 			\Config::load('db', true);
 		}
-		
+
 		if ( ! ($config = \Config::get('db.mongo.'.$name)))
 		{
 			throw new \Mongo_DbException('Invalid instance name given.');
@@ -262,12 +260,12 @@ class Mongo_Db {
 	{
 	 	if ( ! is_array($includes))
 	 	{
-	 		$includes = array();
+	 		$includes = array($includes);
 	 	}
 
 	 	if ( ! is_array($excludes))
 	 	{
-	 		$excludes = array();
+	 		$excludes = array($excludes);
 	 	}
 
 	 	if ( ! empty($includes))
@@ -296,13 +294,13 @@ class Mongo_Db {
 	 *	@usage	$mongodb->where(array('foo' => 'bar'))->get('foobar');
 	 */
 	public function where($wheres = array())
-	 {
-	 	foreach ($wheres as $wh => $val)
-	 	{
-	 		$this->wheres[$wh] = $val;
-	 	}
-	 	return $this;
-	 }
+	{
+		foreach ($wheres as $wh => $val)
+		{
+			$this->wheres[$wh] = $val;
+		}
+		return $this;
+	}
 
 	/**
 	 *	Get the documents where the value of a $field may be something else
@@ -321,7 +319,7 @@ class Mongo_Db {
 
 			foreach ($wheres as $wh => $val)
 			{
-				$this->wheres['$or'][] = array($wh=>$val);
+				$this->wheres['$or'][] = array($wh => $val);
 			}
 		}
 		return $this;
@@ -480,7 +478,7 @@ class Mongo_Db {
 	 */
 	public function where_near($field = '', $co = array())
 	{
-		$this->__where_init($field);
+		$this->_where_init($field);
 		$this->where[$field]['$near'] = $co;
 		return $this;
 	}
@@ -515,26 +513,27 @@ class Mongo_Db {
 	 *	@usage	$mongodb->like('foo', 'bar', 'im', false, TRUE);
 	 */
 	public function like($field = '', $value = '', $flags = 'i', $enable_start_wildcard = TRUE, $enable_end_wildcard = TRUE)
-	 {
-	 	$field = (string) trim($field);
-	 	$this->where_init($field);
-	 	$value = (string) trim($value);
-	 	$value = quotemeta($value);
+	{
+		$field = (string) trim($field);
+		$this->_where_init($field);
+		$value = (string) trim($value);
+		$value = quotemeta($value);
 
-	 	if ($enable_start_wildcard !== TRUE)
-	 	{
-	 		$value = '^' . $value;
-	 	}
+		if ($enable_start_wildcard !== TRUE)
+		{
+			$value = '^' . $value;
+		}
 
-	 	if ($enable_end_wildcard !== TRUE)
-	 	{
-	 		$value .= '$';
-	 	}
+		if ($enable_end_wildcard !== TRUE)
+		{
+			$value .= '$';
+		}
 
-	 	$regex = "/$value/$flags";
-	 	$this->wheres[$field] = new MongoRegex($regex);
-	 	return $this;
-	 }
+		$regex = "/$value/$flags";
+		$this->wheres[$field] = new \MongoRegex($regex);
+
+		return $this;
+	}
 
 	/**
 	 *	Sort the documents based on the parameters passed. To set values to descending order,
@@ -614,7 +613,7 @@ class Mongo_Db {
 	 *	@usage	$mongodb->get('foo', array('bar' => 'something'));
 	 */
 	 public function get($collection = "")
-	 {
+	{
 		if (empty($collection))
 		{
 			throw new \Mongo_DbException("In order to retrieve documents from MongoDB");
@@ -634,23 +633,47 @@ class Mongo_Db {
 			}
 		}
 
-		return (object) $returns;
+		$this->_clear();
+
+		return $returns;
+	}
+
+	/**
+	 * Get one document based upon the passed parameters
+	 *
+	 *	@param	string	$collection		the collection name
+	 *	@usage	$mongodb->get_one('foo');
+	 */
+	 public function get_one($collection = "")
+	{
+		if (empty($collection))
+		{
+			throw new \Mongo_DbException("In order to retrieve documents from MongoDB");
+		}
+
+		$returns = $this->db->{$collection}->findOne($this->wheres, $this->selects);
+
+		$this->_clear();
+
+		return $returns;
 	}
 
 	/**
 	 *	Count the documents based upon the passed parameters
 	 *
 	 *	@param	string	$collection		the collection name
-	 *	@usage	$mongodb->get('foo');
+	 *	@param	boolean	$foundonly		send cursor limit and skip information to the count function, if applicable.
+	 *	@usage	$mongodb->count('foo');
 	 */
 
-	public function count($collection = '') {
+	public function count($collection = '', $foundonly = false)
+	{
 		if (empty($collection))
 		{
 			throw new \Mongo_DbException("In order to retrieve a count of documents from MongoDB");
 		}
 
-		$count = $this->db->{$collection}->find($this->wheres)->limit((int) $this->limit)->skip((int) $this->offset)->count();
+		$count = $this->db->{$collection}->find($this->wheres)->limit((int) $this->limit)->skip((int) $this->offset)->count($foundonly);
 		$this->_clear();
 		return ($count);
 	}
@@ -704,7 +727,7 @@ class Mongo_Db {
 	 *	@param	array	$options		an associative array of options
 	 *	@usage	$mongodb->update('foo', $data = array());
 	 */
-	public function update($collection = '', $data = array(), $options = array())
+	public function update($collection = '', $data = array(), $options = array(), $literal = false)
 	{
 		if (empty($collection))
 		{
@@ -719,7 +742,7 @@ class Mongo_Db {
 		try
 		{
 			$options = array_merge($options, array('fsync' => true, 'multiple' => false));
-			$this->db->{$collection}->update($this->wheres, array('$set' => $data), $options);
+			$this->db->{$collection}->update($this->wheres, (($literal) ? $data : array('$set' => $data)), $options);
 			$this->_clear();
 			return true;
 		}
@@ -727,7 +750,6 @@ class Mongo_Db {
 		{
 			throw new \Mongo_DbException("Update of data into MongoDB failed: {$e->getMessage()}");
 		}
-
 	}
 
 	/**
@@ -737,7 +759,7 @@ class Mongo_Db {
 	 *	@param	array	$data			an associative array of values, array(field => value)
 	 *	@usage	$mongodb->update_all('foo', $data = array());
 	 */
-	public function update_all($collection = "", $data = array())
+	public function update_all($collection = "", $data = array(), $literal = false)
 	{
 		if (empty($collection))
 		{
@@ -751,7 +773,7 @@ class Mongo_Db {
 
 		try
 		{
-			$this->db->{$collection}->update($this->wheres, array('$set' => $data), array('fsync' => true, 'multiple' => true));
+			$this->db->{$collection}->update($this->wheres, (($literal) ? $data : array('$set' => $data)), array('fsync' => true, 'multiple' => true));
 			$this->_clear();
 			return true;
 		}
@@ -784,7 +806,6 @@ class Mongo_Db {
 		{
 			throw new \Mongo_DbException("Delete of data into MongoDB failed: {$e->getMessage()}");
 		}
-
 	}
 
 	/**
@@ -793,8 +814,8 @@ class Mongo_Db {
 	 *	@param	string	$collection		the collection name
 	 *	@usage	$mongodb->delete_all('foo');
 	 */
-	 public function delete_all($collection = '')
-	 {
+	public function delete_all($collection = '')
+	{
 		if (empty($collection))
 		{
 			throw new \Mongo_DbException("No Mongo collection selected to delete from");
@@ -810,7 +831,6 @@ class Mongo_Db {
 		{
 			throw new \Mongo_DbException("Delete of data into MongoDB failed: {$e->getMessage()}");
 		}
-
 	}
 
 	/**

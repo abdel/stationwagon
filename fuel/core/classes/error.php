@@ -1,19 +1,20 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2011 Fuel Development Team
+ * @copyright  2010 - 2012 Fuel Development Team
  * @link       http://fuelphp.com
  */
 
 namespace Fuel\Core;
 
 
-class Error {
+class Error
+{
 
 	public static $levels = array(
 		0                  => 'Error',
@@ -50,10 +51,10 @@ class Error {
 		if ($last_error AND in_array($last_error['type'], static::$fatal_levels))
 		{
 			$severity = static::$levels[$last_error['type']];
-			logger(Fuel::L_ERROR, $severity.' - '.$last_error['message'].' in '.$last_error['file'].' on line '.$last_error['line']);
+			logger(\Fuel::L_ERROR, $severity.' - '.$last_error['message'].' in '.$last_error['file'].' on line '.$last_error['line']);
 
 			$error = new \ErrorException($last_error['message'], $last_error['type'], 0, $last_error['file'], $last_error['line']);
-			if (\Fuel::$env != Fuel::PRODUCTION)
+			if (\Fuel::$env != \Fuel::PRODUCTION)
 			{
 				static::show_php_error($error);
 			}
@@ -74,15 +75,15 @@ class Error {
 	 */
 	public static function exception_handler(\Exception $e)
 	{
-		if ($e instanceof Request404Exception)
+		if (method_exists($e, 'handle'))
 		{
-			\Request::show_404();
+			return $e->handle();
 		}
 
 		$severity = ( ! isset(static::$levels[$e->getCode()])) ? $e->getCode() : static::$levels[$e->getCode()];
-		logger(Fuel::L_ERROR, $severity.' - '.$e->getMessage().' in '.$e->getFile().' on line '.$e->getLine());
+		logger(\Fuel::L_ERROR, $severity.' - '.$e->getMessage().' in '.$e->getFile().' on line '.$e->getLine());
 
-		if (\Fuel::$env != Fuel::PRODUCTION)
+		if (\Fuel::$env != \Fuel::PRODUCTION)
 		{
 			static::show_php_error($e);
 		}
@@ -103,9 +104,9 @@ class Error {
 	 */
 	public static function error_handler($severity, $message, $filepath, $line)
 	{
-		if (static::$count <= Config::get('errors.throttling', 10))
+		if (static::$count <= Config::get('errors.throttle', 10))
 		{
-			logger(Fuel::L_ERROR, $severity.' - '.$message.' in '.$filepath.' on line '.$line);
+			logger(\Fuel::L_ERROR, $severity.' - '.$message.' in '.$filepath.' on line '.$line);
 
 			if (\Fuel::$env != \Fuel::PRODUCTION and ($severity & error_reporting()) == $severity)
 			{
@@ -114,7 +115,7 @@ class Error {
 			}
 		}
 		elseif (\Fuel::$env != \Fuel::PRODUCTION
-				and static::$count == (\Config::get('error_throttling', 10) + 1)
+				and static::$count == (\Config::get('errors.throttle', 10) + 1)
 				and ($severity & error_reporting()) == $severity)
 		{
 			static::$count++;
@@ -139,7 +140,11 @@ class Error {
 		if ($fatal)
 		{
 			$data['contents'] = ob_get_contents();
-			ob_end_clean();
+			while (ob_get_level() > 0)
+			{
+				ob_end_clean();
+			}
+			ob_start(\Config::get('ob_callback', null));
 		}
 		else
 		{
@@ -154,11 +159,32 @@ class Error {
 
 		if ($fatal)
 		{
+			if ( ! headers_sent())
+			{
+				$protocol = \Input::server('SERVER_PROTOCOL') ? \Input::server('SERVER_PROTOCOL') : 'HTTP/1.1';
+				header($protocol.' 500 Internal Server Error');
+			}
+
 			$data['non_fatal'] = static::$non_fatal_cache;
-			exit(\View::factory('errors'.DS.'php_fatal_error', $data, false));
+
+			try
+			{
+				exit(\View::forge('errors'.DS.'php_fatal_error', $data, false));
+			}
+			catch (\FuelException $view_exception)
+			{
+				exit($data['severity'].' - '.$data['message'].' in '.\Fuel::clean_path($data['filepath']).' on line '.$data['error_line']);
+			}
 		}
 
-		echo \View::factory('errors'.DS.'php_error', $data, false);
+		try
+		{
+			echo \View::forge('errors'.DS.'php_error', $data, false);
+		}
+		catch (\FuelException $e)
+		{
+			echo $e->getMessage().'<br />';
+		}
 	}
 
 	/**
@@ -171,8 +197,8 @@ class Error {
 	 */
 	public static function notice($msg, $always_show = false)
 	{
-		$trace = array_merge(array('file' => '(unknown)', 'line' => '(unknown)'), \Arr::element(debug_backtrace(), 1));
-		logger(Fuel::L_DEBUG, 'Notice - '.$msg.' in '.$trace['file'].' on line '.$trace['line']);
+		$trace = array_merge(array('file' => '(unknown)', 'line' => '(unknown)'), \Arr::get(debug_backtrace(), 1));
+		logger(\Fuel::L_DEBUG, 'Notice - '.$msg.' in '.$trace['file'].' on line '.$trace['line']);
 
 		if (\Fuel::$is_test or ( ! $always_show and (\Fuel::$env == \Fuel::PRODUCTION or \Config::get('errors.notices', true) === false)))
 		{
@@ -185,7 +211,7 @@ class Error {
 		$data['line']		= $trace['line'];
 		$data['function']	= $trace['function'];
 
-		echo \View::factory('errors'.DS.'php_short', $data, false);
+		echo \View::forge('errors'.DS.'php_short', $data, false);
 	}
 
 	/**
@@ -196,7 +222,18 @@ class Error {
 	 */
 	public static function show_production_error(\Exception $e)
 	{
-		exit(\View::factory('errors'.DS.'production'));
+		// when we're on CLI, always show the php error
+		if (\Fuel::$is_cli)
+		{
+			return static::show_php_error($e);
+		}
+
+		if ( ! headers_sent())
+		{
+			$protocol = \Input::server('SERVER_PROTOCOL') ? \Input::server('SERVER_PROTOCOL') : 'HTTP/1.1';
+			header($protocol.' 500 Internal Server Error');
+		}
+		exit(\View::forge('errors'.DS.'production'));
 	}
 
 	protected static function prepare_exception(\Exception $e, $fatal = true)

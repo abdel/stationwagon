@@ -13,7 +13,8 @@
 namespace Auth;
 
 
-abstract class Auth_Acl_Driver extends \Auth_Driver {
+abstract class Auth_Acl_Driver extends \Auth_Driver
+{
 
 	/**
 	 * @var	Auth_Driver
@@ -25,7 +26,7 @@ abstract class Auth_Acl_Driver extends \Auth_Driver {
 	 */
 	protected static $_instances = array();
 
-	public static function factory(Array $config = array())
+	public static function forge(array $config = array())
 	{
 		// default driver id to driver name when not given
 		! array_key_exists('id', $config) && $config['id'] = $config['driver'];
@@ -43,7 +44,7 @@ abstract class Auth_Acl_Driver extends \Auth_Driver {
 					? array('driver' => $custom)
 					: array_merge($custom, array('driver' => $d));
 				$class = 'Auth_'.ucfirst($type).'_Driver';
-				$class::factory($custom);
+				$class::forge($custom);
 			}
 		}
 
