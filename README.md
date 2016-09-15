@@ -10,7 +10,7 @@ Stationwagon is a Fuel-powered blog application. The purpose of this application
 
 ## Developers
 
-* [Abdelrahman Mahmoud](http://aplusm.me/) - Lead Developer
+* [Abdelrahman Ahmed](http://abdel.me/) - Lead Developer
 
 ## Downloading Stationwagon
 
